@@ -1,14 +1,17 @@
-import abc
-
 from modules import nodes as nodes_mod
 from modules import pos
 
+import typing
+import abc
+
+if typing.TYPE_CHECKING:
+    from modules import viewport
+
 
 class TargetViewport(abc.ABC):
-    selected_node: nodes_mod.Node | None
+    selection: "viewport.SelectionState"
     nodes: list[nodes_mod.Node]
     edit_node_mode: bool
-    __edit_node_source_pointer: nodes_mod.NodeInput | nodes_mod.NodeOutput | None
 
     @abc.abstractmethod
     def render(self) -> None: ...
@@ -29,153 +32,141 @@ def node_safe_rect(node: nodes_mod.Node) -> pos.Rect:
 
 
 class ShiftableFocus(TargetViewport):
-
     def shift_focus_left(self) -> None:
         if not self.nodes:
             return
         
-        if self.selected_node is None:
-            self.selected_node = self.nodes[0]
+        if self.selection.node is None:
+            self.selection.node = self.nodes[0]
             return
         
         candidate = None
 
         for node in self.nodes:
-            if node == self.selected_node or node.position.x == self.selected_node.position.x:
+            if node == self.selection.node or node.position.x == self.selection.node.position.x:
                 continue
 
-            if node.position.x < (self.selected_node.position.x + self.selected_node.rect.w):
+            if node.position.x < (self.selection.node.position.x + self.selection.node.rect.w):
                 if candidate is None or candidate and node.position.x > candidate.position.x:
                     candidate = node
 
         if candidate is not None:
-            self.selected_node = candidate
+            self.selection.node = candidate
             self.render()
         
     def shift_focus_right(self) -> None:
         if not self.nodes:
             return
         
-        if self.selected_node is None:
-            self.selected_node = self.nodes[0]
+        if self.selection.node is None:
+            self.selection.node = self.nodes[0]
             return
         
         candidate = None
 
         for node in self.nodes:
-            if node == self.selected_node or node.position.x == self.selected_node.position.x:
+            if node == self.selection.node or node.position.x == self.selection.node.position.x:
                 continue
             
-            if self.selected_node.position.x < node.position.x:
+            if self.selection.node.position.x < node.position.x:
                 if candidate is None or candidate and node.position.x < candidate.position.x:
                     candidate = node
 
         if candidate is not None:
-            self.selected_node = candidate
+            self.selection.node = candidate
             self.render()
         
     def shift_focus_up(self) -> None:
         if not self.nodes:
             return
         
-        if self.selected_node is None:
-            self.selected_node = self.nodes[0]
+        if self.selection.node is None:
+            self.selection.node = self.nodes[0]
             return
         
         candidate = None
 
         for node in self.nodes:
-            if node == self.selected_node or node.position.y == self.selected_node.position.y:
+            if node == self.selection.node or node.position.y == self.selection.node.position.y:
                 continue
             
-            if (self.selected_node.position.y + self.selected_node.rect.h) > (node.position.y + node.rect.h):
+            if (self.selection.node.position.y + self.selection.node.rect.h) > (node.position.y + node.rect.h):
                 if candidate is None or candidate and (node.position.y + node.rect.h) > (candidate.position.y + candidate.rect.h):
                     candidate = node
 
         if candidate is not None:
-            self.selected_node = candidate
+            self.selection.node = candidate
             self.render()
         
     def shift_focus_down(self) -> None:
         if not self.nodes:
             return
         
-        if self.selected_node is None:
-            self.selected_node = self.nodes[0]
+        if self.selection.node is None:
+            self.selection.node = self.nodes[0]
             return
         
         candidate = None
 
         for node in self.nodes:
-            if node == self.selected_node or node.position.y == self.selected_node.position.y:
+            if node == self.selection.node or node.position.y == self.selection.node.position.y:
                 continue
             
-            if self.selected_node.position.y < node.position.y:
+            if self.selection.node.position.y < node.position.y:
                 if candidate is None or candidate and node.position.y < candidate.position.y:
                     candidate = node
 
         if candidate is not None:
-            self.selected_node = candidate
+            self.selection.node = candidate
             self.render()
         
 
 class MovableNodes(TargetViewport):
-    def move_node_left(self) -> None:
-        if self.selected_node is None:
-            return
-        
-        self.selected_node.position.x -= 2
-        
+    def node_intersects(self) -> bool:
         for node in self.nodes:
-            if node == self.selected_node:
+            if node == self.selection.node:
                 continue
             
-            if node_safe_rect(node).intersects(self.selected_node.rect):
-                return self.move_node_left()
+            if node_safe_rect(node).intersects(self.selection.node.rect):
+                return True
+        return False    
+        
+    def move_node_left(self) -> None:
+        if self.selection.node is None:
+            return
+        
+        self.selection.node.position.x -= 2
+        while self.node_intersects():
+            self.selection.node.position.x -= 2
                 
         self.render()
                 
     def move_node_right(self) -> None:
-        if self.selected_node is None:
+        if self.selection.node is None:
             return
         
-        self.selected_node.position.x += 2
-        
-        for node in self.nodes:
-            if node == self.selected_node:
-                continue
-            
-            if node_safe_rect(node).intersects(self.selected_node.rect):
-                return self.move_node_right()
+        self.selection.node.position.x += 2
+        while self.node_intersects():
+            self.selection.node.position.x += 2
                 
         self.render()
                 
     def move_node_up(self) -> None:
-        if self.selected_node is None:
+        if self.selection.node is None:
             return
         
-        self.selected_node.position.y -= 1
-        
-        for node in self.nodes:
-            if node == self.selected_node:
-                continue
-            
-            if node_safe_rect(node).intersects(self.selected_node.rect):
-                return self.move_node_up()
+        self.selection.node.position.y -= 1
+        while self.node_intersects():
+            self.selection.node.position.y -= 1
                 
         self.render()
         
     def move_node_down(self) -> None:
-        if self.selected_node is None:
+        if self.selection.node is None:
             return
         
-        self.selected_node.position.y += 1
-        
-        for node in self.nodes:
-            if node == self.selected_node:
-                continue
-            
-            if node_safe_rect(node).intersects(self.selected_node.rect):
-                return self.move_node_down()
+        self.selection.node.position.y += 1
+        while self.node_intersects():
+            self.selection.node.position.y += 1
                 
         self.render()

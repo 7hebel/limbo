@@ -19,7 +19,7 @@ def exit_flow(ins: dict[str, int]) -> dict[str, Any]:
     code = ins.get("Code") or -1
     raise EOFError(code)
 
-NodeFactory(
+EXIT_FACTORY = NodeFactory(
     title="Exit",
     collection=NodesCollections.FLOW_CONTROL,
     flow=FlowControl(False),

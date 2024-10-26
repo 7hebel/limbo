@@ -5,7 +5,7 @@ from modules import types
 # Not.
 def not_bool_handler(ins: dict[str, bool]) -> dict[str, bool]:
     value = ins.get("a")
-    return {"NOT", not value}
+    return {"NOT": not value}
 
 NodeFactory(
     title="Not",

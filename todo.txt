@@ -1,32 +1,12 @@
-node inputs/outputs end_pos based on index
-
-ONLY ONE output for node (if not FLOW)
+!!SCROLLABLE SIDEBAR
+ctrl + up/down in sidebar - scroll category
 
 SMART RENDER - before printing anything, check if char at given pos has changed to avoid flickering
 
-hz wire ends sometimes have weird arc if close to sy==ey
-
-copy/paste nodes
-
-to .exe???
-
-ctrl + up/down in sidebar - scroll category
-
 statusbar word wrap not letter
-
-sometimes statusbar msg is not reseting after end of action (select node, cancel select)
-
-when node is resized due to set constant value it might get in the way of another node
-
-multiple-output nodeOutput
-
-variables??
 
 save / import files.
 
-if selecting source output for flow, check if target is_flow_node to not select default option.
 
----
-
-restructure code + clean code
-merge style.py with terminal.py
+variables???
+to .exe???

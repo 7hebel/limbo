@@ -42,7 +42,7 @@ class ColoredStringObject:
     
     def stream_positioned_chars(self, x: int, y: int) -> Generator[tuple[str, tuple[int, int]], None, None]:
         start_x = x
-        
+
         for char in self.stream_chars():
             if char == BREAK_LINE:
                 y += 1

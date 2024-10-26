@@ -1,3 +1,7 @@
+"""
+Module contains special ASCII chars used within application.
+"""
+
 from dataclasses import dataclass
 
 
@@ -34,10 +38,12 @@ INPUT_FULL = "◉"
 OUTPUT_FREE = "◇"
 OUTPUT_FULL = "◈"
 
-ALL_ARROWS= "🠙🠛🠘🠚"
+ALL_ARROWS = "🠙🠛🠘🠚"
 
 COLLECTION_FOLDED = "⮞"
 COLLECTION_UNFOLDED = "⮟"
 
-FUNCTION = "ƒ"
+FUNCTION_NODE = "ƒ"
 FLOW_NODE = "λ"
+CONSTANT_VALUE = "*"
+

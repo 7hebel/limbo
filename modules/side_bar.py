@@ -21,9 +21,16 @@ class SideBarComponent(ui.TextUIComponent):
         self.collections_folds: dict["nodes.Collection", bool] = {}
         self.collections_array: list["nodes.Collection"] = []
         
+        self.help_keys = {
+            chars.ALL_ARROWS[:2]: "navigate",
+            chars.ALL_ARROWS[2:] + "/enter": "(un)fold collection",
+            "space/enter": "spawn node",
+            "esc/tab": "exit"
+        }
+        
         super().__init__()
 
-    def set_collections(self, collections) -> None:
+    def set_collections(self, collections: list["nodes.Collection"]) -> None:
         self.collections_array = [c.value for c in collections]
         self.collections_folds = {
             collection.value: False for collection in collections
@@ -187,7 +194,7 @@ class SideBarComponent(ui.TextUIComponent):
                 for i, factory in enumerate(collection.factories):
                     line_index += 1
                     
-                    node_type_char = chars.FUNCTION if factory.is_function_node() else chars.FLOW_NODE if factory.is_flow_node() else ""
+                    node_type_char = chars.FUNCTION_NODE if factory.is_function_node() else chars.FLOW_NODE if factory.is_flow_node() else ""
                     node_type_indicator = " " + style.tcolor(node_type_char, factory.outputs[0].data_type.color, styles=[style.AnsiStyle.DIM]) if node_type_char else ""
 
                     styles = [style.AnsiStyle.DIM] if not self.is_focused else [style.AnsiStyle.ITALIC, style.AnsiStyle.INVERT] if factory == self.__focused_object  else []
@@ -200,6 +207,4 @@ class SideBarComponent(ui.TextUIComponent):
             line_index += 1
         
     
-
-
 side_bar = SideBarComponent()

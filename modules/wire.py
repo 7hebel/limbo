@@ -123,7 +123,7 @@ class WireBuilder:
                 self.positioned_chars[(ex, ey)] = self.charset.hz
                 ex -= 1
                 
-        # Add corners.
+        # Add corners and build bridge.
         if ey > sy:
             self.positioned_chars[(meet_x, ey)] = self.charset.sw
             self.positioned_chars[(meet_x, sy)] = self.charset.ne
@@ -146,16 +146,16 @@ class WireBuilder:
         append_round = False
         
         # Set headers to point to source.
-        if sy >= ey:
+        if sy > ey:
             self.positioned_chars[(sx, sy)] = self.charset.se
         else:
             self.positioned_chars[(sx, sy)] = self.charset.ne
             
-        if ey >= sy:
+        if ey > sy:
             self.positioned_chars[(ex, ey)] = self.charset.sw
         else:
             self.positioned_chars[(ex, ey)] = self.charset.nw
-        
+            
         # Find common Y pos.
         while not meet_y:
             append_round = not append_round
@@ -189,6 +189,10 @@ class WireBuilder:
         # Fill horizontal line.
         for x in range(ex + 1, sx):
             self.positioned_chars[(x, sy)] = self.charset.hz
+            
+        # Apply narrow corner fix.
+        if self.end[1] == self.start[1] + 1 or self.end[1] == self.start[1] - 1:
+            self.positioned_chars[(self.end[0], self.end[1])] = self.charset.fr
             
     def build_targetted_vertical_path(self, target_y: int) -> None:
         sx, sy = self.start

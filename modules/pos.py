@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Generator
+from enum import IntEnum
 
 
 @dataclass
@@ -26,14 +26,8 @@ class Rect:
     def contains_point(self, x: int, y: int) -> bool:
         return x in range(self.pos.x, self.pos.x + self.w) and y in range(self.pos.y, self.pos.y + self.h)
         
-
-def iter_alternately(a: list, b: list) -> Generator:
-    a = a.copy()
-    b = b.copy()
-    
-    while a or b:
-        if a:
-            yield a.pop(0)
         
-        if b:
-            yield b.pop(0)
+class VerticalDirection(IntEnum):
+    UP = -1
+    DOWN = 1
+        

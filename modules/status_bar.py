@@ -1,5 +1,6 @@
 from modules.side_bar import side_bar
 from modules import terminal
+from modules import chars
 from modules import style
 from modules import pos
 from modules import ui
@@ -8,7 +9,7 @@ import re
 
 
 def split_styled_message(message: str, max_len: int) -> list:
-    """Fit ANSI-styled string into lines of given size."""
+    """ Fit ANSI-styled string into lines of given size. """
     lines = []
     fixed_len = 0
 
@@ -75,6 +76,18 @@ class StatusBarComponent(ui.TextUIComponent):
         for key, info in keys_info.items():
             content += style.key(key) + f" {info}   "
         self.set_message(content.strip())
+
+    def standard_keys_help(self) -> None:
+        STD_KEYS = {
+            chars.ALL_ARROWS: "shift focus",
+            f"ctrl+{chars.ALL_ARROWS[0]}": "move camera",
+            f"alt+{chars.ALL_ARROWS[0]}": "move node",
+            "enter": "edit node",
+            "tab": "nodes",
+            "F1": "run"
+        }
+        
+        self.keys_help("", STD_KEYS)
 
     def error(self, message: str) -> None:
         content = style.tcolor(" ERROR ", color=style.AnsiFGColor.WHITE, bg_color=style.AnsiBGColor.RED) + " " + message
