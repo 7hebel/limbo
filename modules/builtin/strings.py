@@ -42,3 +42,34 @@ NodeFactory(
     outputs=[NodeOutput("lower", types.TEXT)],
     handler=lowercase_string,
 )
+
+# Count.
+def count_string(ins: dict[str, str]) -> dict[str, int]:
+    text = ins.get("text")
+    phrase = ins.get("phrase")
+    return {"count": text.count(phrase)}
+
+NodeFactory(
+    title="Count phrase",
+    collection=NodesCollections.STRINGS,
+    flow=FlowControl(False),
+    inputs=[NodeInput("text", types.TEXT), NodeInput("phrase", types.TEXT)],
+    outputs=[NodeOutput("lower", types.TEXT)],
+    handler=count_string,
+)
+
+# Join.
+def join_strings(ins: dict[str, str]) -> dict[str, str]:
+    str1 = ins.get("text1")
+    str2 = ins.get("text2")
+    sep = ins.get("sep") or ""
+    return {"joined": f"{str1}{sep}{str2}"}
+
+NodeFactory(
+    title="Join",
+    collection=NodesCollections.STRINGS,
+    flow=FlowControl(False),
+    inputs=[NodeInput("text1", types.TEXT), NodeInput("text2", types.TEXT), NodeInput("sep", types.TEXT, False)],
+    outputs=[NodeOutput("joined", types.TEXT)],
+    handler=join_strings,
+)

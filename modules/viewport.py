@@ -62,7 +62,6 @@ class ViewportComponent(ui.TextUIComponent, vp_ext.ShiftableFocus, vp_ext.Movabl
 
     def get_rect(self) -> pos.Rect:
         """ Return terminal total Viewport rect. """
-
         x, y = 1, 0
         w, h = terminal.get_w() - 1, terminal.get_h()
 

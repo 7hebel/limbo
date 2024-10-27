@@ -38,11 +38,19 @@ def main() -> None:
                 side_bar.unfocus()
                 status_bar.standard_keys_help()
 
-            if keyboard.is_pressed("down"):
-                side_bar.move_focus_down()
-                
-            if keyboard.is_pressed("up"):
-                side_bar.move_focus_up()
+            if keyboard.is_pressed("ctrl"):
+                if keyboard.is_pressed("down"):
+                    side_bar.move_focus_category_down()
+                    
+                if keyboard.is_pressed("up"):
+                    side_bar.move_focus_category_up()
+
+            else:
+                if keyboard.is_pressed("down"):
+                    side_bar.move_focus_down()
+                    
+                if keyboard.is_pressed("up"):
+                    side_bar.move_focus_up()
                 
             if keyboard.is_pressed("right"):
                 side_bar.unfold_collection()

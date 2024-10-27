@@ -1,12 +1,6 @@
-!!SCROLLABLE SIDEBAR
-ctrl + up/down in sidebar - scroll category
-
 SMART RENDER - before printing anything, check if char at given pos has changed to avoid flickering
 
-statusbar word wrap not letter
-
 save / import files.
-
 
 variables???
 to .exe???

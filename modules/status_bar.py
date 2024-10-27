@@ -8,30 +8,29 @@ from modules import ui
 import re
 
 
-def split_styled_message(message: str, max_len: int) -> list:
-    """ Fit ANSI-styled string into lines of given size. """
+def split_styled_message(message: str, max_len: int) -> list[str]:
+    """ Fit ANSI-styled string into lines of given size, wrapping words. """
     lines = []
-    fixed_len = 0
+    current_line = ""
+    current_length = 0
 
-    while fixed_len < len(message):
-        real_len = 0
-        line_start = fixed_len
-        
-        while fixed_len < len(message):
-            if message[fixed_len] == '\x1B':
-                matched = re.match(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', message[fixed_len:])
-                if matched:
-                    fixed_len += matched.end()
-                    continue
+    words = re.split(r'(\s+)', message)
 
-            real_len += 1
-            fixed_len += 1
+    for word in words:
+        word_length = style.real_length(word)
 
-            if real_len >= max_len:
-                break
-        
-        lines.append(message[line_start:fixed_len])
-    
+        if current_length + word_length > max_len:
+            if current_line:
+                lines.append(current_line)
+            current_line = word
+            current_length = word_length
+        else:
+            current_line += word
+            current_length += word_length
+
+    if current_line:
+        lines.append(current_line)
+
     return lines
 
 
@@ -57,9 +56,7 @@ class StatusBarComponent(ui.TextUIComponent):
         return pos.Rect(pos.Position(x, y), w, h)
 
     def get_border_connections(self) -> style.BorderConnection:
-        return style.BorderConnection(
-            n = True,
-        )
+        return style.BorderConnection(n = True)
 
     def set_message(self, message: str) -> None:
         self.message = message
@@ -75,6 +72,7 @@ class StatusBarComponent(ui.TextUIComponent):
         content = style.tcolor(mode, styles=[style.AnsiStyle.INVERT, style.AnsiStyle.BOLD]) + "  " if mode else ""
         for key, info in keys_info.items():
             content += style.key(key) + f" {info}   "
+            
         self.set_message(content.strip())
 
     def standard_keys_help(self) -> None:
