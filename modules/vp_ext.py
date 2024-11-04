@@ -1,34 +1,31 @@
 from modules import nodes as nodes_mod
 from modules import helpers
-from modules import string
-from modules import pos
+from modules import measure
 
 import typing
 import abc
 
 if typing.TYPE_CHECKING:
-    from modules import viewport
+    from modules import workspace
 
 
 class TargetViewport(abc.ABC):
-    selection: "viewport.SelectionState"
+    selection: "workspace.SelectionState"
     nodes: list[nodes_mod.Node]
-    _nodes_state_cache: dict
     edit_node_mode: bool
-    camera_y: int
-    camera_x: int
+    camera: measure.Camera
 
     @abc.abstractmethod
     def render(self) -> None: ...
 
 
-def node_safe_rect(node: nodes_mod.Node) -> pos.Rect:
+def node_safe_rect(node: nodes_mod.Node) -> measure.Rect:
     if node.position is None:
         raise ValueError("cannot calc safe rect for node with no position")
 
     w, h = node.calc_output_size()
-    rect = pos.Rect(
-        pos.Position(node.position.x - 1, node.position.y - 1),
+    rect = measure.Rect(
+        measure.Position(node.position.x - 1, node.position.y - 1),
         w + 2,
         h + 2
     )
@@ -177,46 +174,46 @@ class MovableNodes(TargetViewport):
         self.render()
 
 
-class StateBasedNodeCache(TargetViewport):
-    def eval_node_state(self, node: nodes_mod.Node) -> str:
-        """ Used for caching drawable nodes. """
-        state = "0" if not node == self.selection.node else "1"
-        state += "0" if not self.edit_node_mode else "1"
-        state += f"{node.position.x}.{node.position.y}"
-        state += f"{self.camera_x}.{self.camera_y}"
+# class StateBasedNodeCache(TargetViewport):
+#     def eval_node_state(self, node: nodes_mod.Node) -> str:
+#         """ Used for caching drawable nodes. """
+#         state = "0" if not node == self.selection.node else "1"
+#         state += "0" if not self.edit_node_mode else "1"
+#         state += f"{node.position.x}.{node.position.y}"
+#         state += f"{self.camera.x}.{self.camera.y}"
 
-        if self.edit_node_mode and node == self.selection.node:
-            if self.selection.highlighted_source == node.flow.input_src:
-                state += "I"
+#         if self.edit_node_mode and node == self.selection.node:
+#             if self.selection.highlighted_source == node.flow.input_src:
+#                 state += "I"
 
-            elif self.selection.highlighted_source == node.flow.output_src:
-                state += "O"
+#             elif self.selection.highlighted_source == node.flow.output_src:
+#                 state += "O"
 
-        for index, source in enumerate(helpers.iter_alternately(node.inputs, node.outputs)):
-            if isinstance(source, nodes_mod.NodeInput):
-                if source.source is not None:
-                    state += f"c{index}"
-            elif source.target is not None:
-                    state += f"c{index}"
+#         for index, source in enumerate(helpers.iter_alternately(node.inputs, node.outputs)):
+#             if isinstance(source, nodes_mod.NodeInput):
+#                 if source.source is not None:
+#                     state += f"c{index}"
+#             elif source.target is not None:
+#                     state += f"c{index}"
             
-            if self.edit_node_mode and self.selection.highlighted_source == source:
-                state += f"h{index}"
+#             if self.edit_node_mode and self.selection.highlighted_source == source:
+#                 state += f"h{index}"
 
-            if source == self.selection.source:
-                state += f"s{index}"
+#             if source == self.selection.source:
+#                 state += f"s{index}"
 
-        return state
+#         return state
 
-    def has_node_state_changed(self, node: nodes_mod.Node) -> bool:
-        state = self.eval_node_state(node)
+#     def has_node_state_changed(self, node: nodes_mod.Node) -> bool:
+#         state = self.eval_node_state(node)
         
-        if node.node_id not in self._nodes_state_cache:
-            self._nodes_state_cache[node.node_id] = (state, node.rect)
-            return True
+#         if node.node_id not in self._nodes_state_cache:
+#             self._nodes_state_cache[node.node_id] = (state, node.rect)
+#             return True
         
-        if self._nodes_state_cache.get(node.node_id)[0] != state:
-            self._nodes_state_cache[node.node_id] = (state, node.rect)
-            return True
+#         if self._nodes_state_cache.get(node.node_id)[0] != state:
+#             self._nodes_state_cache[node.node_id] = (state, node.rect)
+#             return True
         
-        return False
+#         return False
         

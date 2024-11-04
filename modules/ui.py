@@ -1,6 +1,6 @@
 from modules import terminal
+from modules import measure
 from modules import style
-from modules import pos
 
 from abc import ABC, abstractmethod
 
@@ -25,7 +25,7 @@ class TextUIComponent(ABC):
         initalized_components.append(self)
 
     @abstractmethod
-    def get_rect(self) -> pos.Rect | None:
+    def get_rect(self) -> measure.Rect | None:
         """ Returns component's rectangle including borders. None if component is not visible. """
         ...
         
@@ -39,7 +39,7 @@ class TextUIComponent(ABC):
         """ Render component's contents (not including border.) """
         ...
         
-    def clean_contents(self, custom_rect: pos.Rect | None = None) -> None:
+    def clean_contents(self, custom_rect: measure.Rect | None = None) -> None:
         """ Clean component's contents (not including border.) """
         area = self.get_rect()
         if custom_rect is not None:

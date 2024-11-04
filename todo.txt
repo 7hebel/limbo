@@ -1,6 +1,12 @@
 attach filepath to file after import
 add py main.py FILEPATH to auto import
 
+remove all nodes function to workspace
+
+cleanup vp_ext
+
+workspace name at the border top of viewport
+
 use math.dist() to choose the closest node while shifting focus 
 
 move node conencted methods to the NodeManager class
@@ -14,6 +20,7 @@ no special chars in node names / sources
 
 to .exe???
 
+better sidebar rendering
 
 NODES:
 files nodes category

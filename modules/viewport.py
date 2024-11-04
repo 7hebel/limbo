@@ -2,67 +2,26 @@ from modules.status_bar import status_bar
 from modules.side_bar import side_bar
 from modules import wire_builder
 from modules import user_input
+from modules import workspace
 from modules import terminal
+from modules import measure
 from modules import helpers
 from modules import string
-from modules import vp_ext
 from modules import format
 from modules import chars
 from modules import style
 from modules import nodes
 from modules import types
-from modules import pos
 from modules import run
 from modules import ui
 
-from dataclasses import dataclass
-        
 
-@dataclass
-class SelectionState:
-    node: nodes.Node | None = None
-    source: nodes.NodeInput | nodes.NodeOutput | None = None
-    highlighted_source: nodes.NodeInput | nodes.NodeOutput | None = None
-
-
-class ViewportComponent(ui.TextUIComponent, vp_ext.ShiftableFocus, vp_ext.MovableNodes, vp_ext.StateBasedNodeCache):
-    def __init__(self) -> None:
-        self.camera_x = 0
-        self.camera_y = 0
-        self.nodes: list["nodes.Node"] = []
-        self.selection = SelectionState()
-        self._nodes_state_cache = {}
-        self.__edit_node_mode = False
-        
+class ViewportComponent(ui.TextUIComponent):
+    def __init__(self, scope: workspace.Workspace) -> None:
+        self.scope = scope.initialize(self)
         super().__init__()
 
-    @property
-    def edit_node_mode(self) -> bool:
-        return self.__edit_node_mode
-
-    @edit_node_mode.setter
-    def edit_node_mode(self, state: bool) -> None:
-        if state:
-            self.selection.highlighted_source = self.selection.node.first_source()
-
-            status_bar.keys_help(
-                "EDIT NODE",
-                {
-                    "esc": "exit",
-                    chars.ALL_ARROWS: "change source",
-                    "del": "disconnect wire",
-                    "space": "connect wire",
-                    "c": "edit constant"
-                }
-            )
-
-        else:
-            self.selection.highlighted_source = None
-
-        self.__edit_node_mode = state
-        self.render()
-
-    def get_rect(self) -> pos.Rect:
+    def get_rect(self) -> measure.Rect:
         """ Return terminal total Viewport rect. """
         x, y = 1, 0
         w, h = terminal.get_w() - 1, terminal.get_h()
@@ -77,113 +36,30 @@ class ViewportComponent(ui.TextUIComponent, vp_ext.ShiftableFocus, vp_ext.Movabl
         if self.get_border_connections().s:
             h += 1
 
-        return pos.Rect(pos.Position(x, y), w, h)
+        return measure.Rect(measure.Position(x, y), w, h)
 
-    def work_rect(self) -> pos.Rect:
+    def work_rect(self) -> measure.Rect:
         """ Returns Rect from the inside of the viewport border. """
-
         rect = self.get_rect()
-        return pos.Rect(pos.Position(rect.pos.x + 1, rect.pos.y + 2), rect.w - 1, rect.h - 2)
+        return measure.Rect(measure.Position(rect.pos.x + 1, rect.pos.y + 2), rect.w - 1, rect.h - 2)
 
-    def get_cameraview_rect(self) -> pos.Rect:
+    def get_cameraview_rect(self) -> measure.Rect:
         vp_rect = self.work_rect()
         view_w = vp_rect.w + vp_rect.pos.x
         view_h = vp_rect.h + vp_rect.pos.y
 
-        start_render_pos = pos.Position(self.camera_x - (view_w // 2), self.camera_y - (view_h // 2))
-        return pos.Rect(start_render_pos, view_w, view_h)
+        start_render_pos = measure.Position(self.scope.camera.x - (view_w // 2), self.scope.camera.y - (view_h // 2))
+        return measure.Rect(start_render_pos, view_w, view_h)
 
     def get_border_connections(self) -> style.BorderConnection:
         return style.BorderConnection(s=status_bar.get_rect() is not None)
 
-    def add_node(self, node: "nodes.Node") -> None:
-        if node.position is None:
-            node.position = pos.Position(self.camera_x, self.camera_y)
-
-        self.nodes.append(node)
-        self.selection.node = node
-
-        if self.node_intersects():
-            self.move_node_right()
-
-        self.render()
-
-    def remove_node(self) -> None:
-        """ Remove selected node. Disconnect all wires. """
-        node = self.selection.node
-        if node is None:
-            return
-
-        if self.selection.source:
-            source = self.selection.source
-            if isinstance(self.selection.source, tuple):
-                source = self.selection.source[1]
-                
-            if source.node == node:
-                self.selection.source = None
-                
-        self.selection.node = None
-
-        node.unlink()
-        self.nodes.remove(node)
-
-        self.selection.node = self.nodes[0] if self.nodes else None
-        self.render()
-        return status_bar.set_message(f"Removed {style.node(node)}")
-
-    def duplicate_node(self) -> None:
-        if not self.selection.node:
-            return
-        
-        new_node = self.selection.node.factory.build_instance()
-        self.add_node(new_node)
-
-    def shift_source_selection(self, direction: pos.VerticalDirection) -> None:
-        if not self.edit_node_mode or self.selection.node is None:
-            return
-
-        flows_ctrls = self.selection.node.get_selectable_flow_controls()
-        all_sources = flows_ctrls + list(helpers.iter_alternately(self.selection.node.inputs, self.selection.node.outputs))
-        next_index = all_sources.index(self.selection.highlighted_source) + direction
-
-        if next_index > len(all_sources) - 1:
-            next_index = 0
-        elif next_index == -1:
-            next_index = len(all_sources) - 1
-
-        self.selection.highlighted_source = all_sources[next_index]
-        self.render()
-
-    def disconnect_source(self) -> None:
-        if not self.edit_node_mode or self.selection.node is None or self.selection.highlighted_source is None:
-            return
-
-        self.selection.highlighted_source.disconnect()
-        self.render()
-
-    def choose_source(self) -> None:
-        if not self.edit_node_mode or self.selection.node is None:
-            return
-
-        if self.selection.source is None:
-            status_bar.set_message(f"Select target source for {style.source(self.selection.highlighted_source)}")
-
-            self.selection.source = self.selection.highlighted_source
-            self.edit_node_mode = False
-            return self.render()
-
-        nodes.connect_sources(self.selection.highlighted_source, self.selection.source)
-        self.selection.source = None
-        self.edit_node_mode = False
-        status_bar.standard_keys_help()
-        self.render()
-
-    def drawable_node(self, node: "nodes.Node") -> tuple[string.ColoredStringObject, pos.Rect]:
+    def drawable_node(self, node: "nodes.Node") -> tuple[string.ColoredStringObject, measure.Rect]:
         """ Returns drawable representation of node, and it's rect. """
         w, h = node.calc_output_size()
-        rect = pos.Rect(node.position, w, h)
+        rect = measure.Rect(node.position, w, h)
 
-        outline_color = node.color if node == self.selection.node else style.AnsiFGColor.LIGHTBLACK
+        outline_color = node.color if node == self.scope.selection.node else style.AnsiFGColor.LIGHTBLACK
 
         builder = string.ColoredStringObject()
         builder.feed_string(chars.ROUNDED_LINE.nw + (chars.ROUNDED_LINE.hz * (w - 2)) + chars.ROUNDED_LINE.ne, outline_color)
@@ -192,8 +68,8 @@ class ViewportComponent(ui.TextUIComponent, vp_ext.ShiftableFocus, vp_ext.Movabl
         flow_in_char = chars.DOUBLE_LINE.vl if node.flow.enable_input else chars.ROUNDED_LINE.vt
         flow_out_char = chars.DOUBLE_LINE.vr if node.flow.enable_output else chars.ROUNDED_LINE.vt
 
-        if self.edit_node_mode and node == self.selection.node:
-            if self.selection.highlighted_source == node.flow.input_src:
+        if self.scope.edit_node_mode and node == self.scope.selection.node:
+            if self.scope.selection.highlighted_source == node.flow.input_src:
                 builder.feed_char(flow_in_char, style.AnsiFGColor.WHITE, styles=[style.AnsiStyle.BLINK, style.AnsiStyle.INVERT])
             else:
                 builder.feed_char(flow_in_char, outline_color)
@@ -201,10 +77,10 @@ class ViewportComponent(ui.TextUIComponent, vp_ext.ShiftableFocus, vp_ext.Movabl
             builder.feed_char(flow_in_char, outline_color)
 
         title_line = f"{node.title}".center(w - 2)
-        builder.feed_string(title_line, node.color or None, styles=[style.AnsiStyle.INVERT, style.AnsiStyle.ITALIC] if node == self.selection.node and self.edit_node_mode else [])
+        builder.feed_string(title_line, node.color or None, styles=[style.AnsiStyle.INVERT, style.AnsiStyle.ITALIC] if node == self.scope.selection.node and self.scope.edit_node_mode else [])
 
-        if self.edit_node_mode and node == self.selection.node:
-            if self.selection.highlighted_source == node.flow.output_src:
+        if self.scope.edit_node_mode and node == self.scope.selection.node:
+            if self.scope.selection.highlighted_source == node.flow.output_src:
                 builder.feed_char(flow_out_char, style.AnsiFGColor.WHITE, styles=[style.AnsiStyle.BLINK, style.AnsiStyle.INVERT])
             else:
                 builder.feed_char(flow_out_char, outline_color)
@@ -219,8 +95,8 @@ class ViewportComponent(ui.TextUIComponent, vp_ext.ShiftableFocus, vp_ext.Movabl
         for source in helpers.iter_alternately(node.inputs, node.outputs):
             source: "nodes.NodeInput | nodes.NodeOutput"
 
-            is_selected_node = self.edit_node_mode and self.selection.highlighted_source == source
-            is_selected_source = source == self.selection.source
+            is_selected_node = self.scope.edit_node_mode and self.scope.selection.highlighted_source == source
+            is_selected_source = source == self.scope.selection.source
 
             styles = [style.AnsiStyle.ITALIC]
             if is_selected_node:
@@ -255,7 +131,7 @@ class ViewportComponent(ui.TextUIComponent, vp_ext.ShiftableFocus, vp_ext.Movabl
                   rel_from: tuple[int, int],
                   rel_to: tuple[int, int],
                   charset: chars.LineChars,
-                  avoid_rects: list[pos.Rect],
+                  avoid_rects: list[measure.Rect],
                   color: style.AnsiFGColor,
                   dimmed: bool,
                   highlight: bool
@@ -306,31 +182,11 @@ class ViewportComponent(ui.TextUIComponent, vp_ext.ShiftableFocus, vp_ext.Movabl
 
         return value
 
-    def edit_constant(self) -> None:
-        if not self.selection.highlighted_source:
-            return
-        
-        if self.selection.highlighted_source.data_type == types.FLOW:
-            return status_bar.error(f"Cannnot set constant to source of type {style.datatype(types.FLOW)}")
-
-        if isinstance(self.selection.highlighted_source, nodes.NodeOutput):
-            return status_bar.error(f"Cannot set constant value to the output source: {style.source(self.selection.highlighted_source)}")
-
-        edit_help = {
-            "esc": "Remove constant.",
-            "enter": "Accept constant."
-        }
-        status_bar.keys_help("Edit constant.", edit_help)
-
-        current_value = self.selection.highlighted_source.constant_value or ""
-        value = self.prompt(style.source(self.selection.highlighted_source), current_value)
-        self.selection.highlighted_source.set_constant(value)
-
     def render(self):
         self.clean_contents()
         camera_rect = self.get_cameraview_rect()
 
-        for node in self.nodes:
+        for node in self.scope.nodes:
             # Draw data wires.
             for output in node.outputs + [node.flow.output_src]:
                 if output is None:
@@ -340,14 +196,14 @@ class ViewportComponent(ui.TextUIComponent, vp_ext.ShiftableFocus, vp_ext.Movabl
                     rel_start = output.rel_pos
                     rel_end = output.target_rel_pos
 
-                    dimmed = not (node == self.selection.node or output.target.node == self.selection.node)
-                    selected = self.edit_node_mode and self.selection.highlighted_source in (output, output.target)
+                    dimmed = not (node == self.scope.selection.node or output.target.node == self.scope.selection.node)
+                    selected = self.scope.edit_node_mode and self.scope.selection.highlighted_source in (output, output.target)
                     charset = chars.DOUBLE_LINE if output.data_type == types.FLOW else chars.ROUNDED_LINE if not selected else chars.ROUNDED_DOTTED
 
                     self.draw_wire(rel_start, rel_end, charset, [node.rect, output.target.node.rect], output.data_type.color, dimmed, selected)
 
         # Draw nodes.
-        for node in self.nodes:
+        for node in self.scope.nodes:
             string_object, rect = self.drawable_node(node)
 
             x = rect.pos.x - camera_rect.pos.x
@@ -362,43 +218,43 @@ class ViewportComponent(ui.TextUIComponent, vp_ext.ShiftableFocus, vp_ext.Movabl
         if not nodes.builtin.START_FACTORY.instances:
             return status_bar.error(f"Missing {style.node(nodes.builtin.START_FACTORY)} node!")
 
-        for node in self.nodes:
+        for node in self.scope.nodes:
             for input_source in node.inputs:
-                if input_source.required:
-                    if input_source.constant_value is None and input_source.source is None:
-                        self.camera_x, self.camera_y = node.position.x, node.position.y
-                        self.render()
-                        return status_bar.error(f"Undefined required value: {style.source(input_source)}")
+                if input_source.required and input_source.constant_value is None and input_source.source is None:
+                    self.scope.camera.set_pos(node.position)
+                    self.render()
+                    
+                    return status_bar.error(f"Undefined required value: {style.source(input_source)}")
 
         start_node = nodes.builtin.START_FACTORY.instances[0]
-        run.NodeRunner(start_node, self.nodes).run()
+        run.NodeRunner(start_node, self.scope.nodes).run()
 
     def export_state(self) -> None:
         path = self.prompt("Export path", "")
         if path is None:
             return
         
-        format.LimbFormat.export(self.nodes, path)
+        format.LimbFormat.export(self.scope.nodes, path)
 
     def import_state(self) -> None:
         path = self.prompt("Import path", "")
         if path is None:
             return
         
-        self.remove_node()
-        for node in self.nodes:
-            self.selection.node = node
-            self.remove_node()
+        self.scope.remove_node()
+        for node in self.scope.nodes:
+            self.scope.selection.node = node
+            self.scope.remove_node()
             
-        self.selection.node = None
-        self.selection.source = None
-        self.selection.highlighted_source = None
-        self.edit_node_mode = False
+        self.scope.selection.node = None
+        self.scope.selection.source = None
+        self.scope.selection.highlighted_source = None
+        self.scope.edit_node_mode = False
             
         imported_nodes = format.LimbFormat.import_state(path)
         if imported_nodes is None:
             return
         
         for node in imported_nodes:
-            self.add_node(node)
+            self.scope.add_node(node)
             

@@ -1,18 +1,18 @@
+from modules import measure
 from modules import chars
-from modules import pos
 
 import math
 
 
 class WireBuilder:
-    def __init__(self, start: tuple[int, int], end: tuple[int, int], charset: chars.LineChars, avoid_rects: list[pos.Rect], camera_rect: pos.Rect) -> None:
+    def __init__(self, start: tuple[int, int], end: tuple[int, int], charset: chars.LineChars, avoid_rects: list[measure.Rect], camera_rect: measure.Rect) -> None:
         self.charset = charset
         self.camera_rect = camera_rect
         
-        self.avoid_rects: list[pos.Rect] = []
+        self.avoid_rects: list[measure.Rect] = []
         for av_rect in avoid_rects:
-            rect_copy = pos.Rect(
-                pos.Position(av_rect.pos.x - camera_rect.pos.x, av_rect.pos.y - camera_rect.pos.y),
+            rect_copy = measure.Rect(
+                measure.Position(av_rect.pos.x - camera_rect.pos.x, av_rect.pos.y - camera_rect.pos.y),
                 av_rect.w,
                 av_rect.h
             ) 

@@ -1,7 +1,6 @@
 """
 Module contains special ASCII chars used within application.
 """
-
 from dataclasses import dataclass
 
 

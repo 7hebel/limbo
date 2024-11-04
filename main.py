@@ -1,23 +1,27 @@
 from modules.status_bar import status_bar
 from modules.side_bar import side_bar
+from modules import workspace
 from modules import viewport
 from modules import terminal
 from modules import helpers
+from modules import measure
 from modules import style
-from modules import nodes
-from modules import pos
 from modules import ui
 
+import traceback
 import keyboard
 import time
 
 terminal.hide_cursor()
 
 
+default_workspace = workspace.Workspace("<default>")
+VIEWPORT = viewport.ViewportComponent(default_workspace)
+
+
 def main() -> None:    
-    vp = viewport.ViewportComponent()
-    start_node = nodes.builtin.START_FACTORY.build_instance()    
-    vp.add_node(start_node)
+    # start_node = nodes.builtin.START_FACTORY.build_instance()    
+    # VIEWPORT.scope.add_node(start_node)
     ui.render_all()
 
     status_bar.standard_keys_help()
@@ -30,11 +34,11 @@ def main() -> None:
 
         # Export state.
         if keyboard.is_pressed("ctrl+e"):
-            vp.export_state()
+            VIEWPORT.export_state()
 
         # Import state.
         if keyboard.is_pressed("ctrl+i"):
-            vp.import_state()
+            VIEWPORT.import_state()
 
         # Sidebar.
         if keyboard.is_pressed("ctrl+b"):
@@ -73,75 +77,75 @@ def main() -> None:
                 else:
                     node = side_bar.spawn_node()
                     if node is not None:
-                        vp.add_node(node)
+                        VIEWPORT.scope.add_node(node)
                         status_bar.set_message(f"Spawned new node: {style.node(node)}")
 
                         side_bar.unfocus()
-                        vp.selection.node = node
+                        VIEWPORT.scope.selection.node = node
                 
-        elif not vp.edit_node_mode:
+        elif not VIEWPORT.scope.edit_node_mode:
             # Camera movement.
             if keyboard.is_pressed("ctrl"):
                 if keyboard.is_pressed("ctrl+left"):
-                    vp.camera_x += 2
-                    vp.render()
+                    VIEWPORT.scope.camera.move_left()
+                    VIEWPORT.render()
                                     
                 if keyboard.is_pressed("ctrl+right"):
-                    vp.camera_x -= 2
-                    vp.render()
+                    VIEWPORT.scope.camera.move_right()
+                    VIEWPORT.render()
                     
                 if keyboard.is_pressed("ctrl+down"):
-                    vp.camera_y -= 1
-                    vp.render()
+                    VIEWPORT.scope.camera.move_down()
+                    VIEWPORT.render()
                     
                 if keyboard.is_pressed("ctrl+up"):
-                    vp.camera_y += 1
-                    vp.render()
+                    VIEWPORT.scope.camera.move_up()
+                    VIEWPORT.render()
             
             # Node movement.
             elif keyboard.is_pressed("alt"):
                 if keyboard.is_pressed("alt+right"):
-                    vp.move_node_right()
+                    VIEWPORT.scope.move_node_right()
                     
                 if keyboard.is_pressed("alt+left"):
-                    vp.move_node_left()
+                    VIEWPORT.scope.move_node_left()
                     
                 if keyboard.is_pressed("alt+up"):
-                    vp.move_node_up()
+                    VIEWPORT.scope.move_node_up()
                     
                 if keyboard.is_pressed("alt+down"):
-                    vp.move_node_down()
+                    VIEWPORT.scope.move_node_down()
             
             # Focus shifting.
             else:
                 if keyboard.is_pressed("right"):
-                    vp.shift_focus_right()
+                    VIEWPORT.scope.shift_focus_right()
                     
                 if keyboard.is_pressed("left"):
-                    vp.shift_focus_left()
+                    VIEWPORT.scope.shift_focus_left()
                     
                 if keyboard.is_pressed("up"):
-                    vp.shift_focus_up()
+                    VIEWPORT.scope.shift_focus_up()
                     
                 if keyboard.is_pressed("down"):
-                    vp.shift_focus_down()
+                    VIEWPORT.scope.shift_focus_down()
             
             # Manage nodes.
             if keyboard.is_pressed("backspace") or keyboard.is_pressed("del"):
-                vp.remove_node()
+                VIEWPORT.scope.remove_node()
                 
             if keyboard.is_pressed("enter"):
-                if vp.selection.node is not None:
-                    vp.edit_node_mode = True
+                if VIEWPORT.scope.selection.node is not None:
+                    VIEWPORT.scope.edit_node_mode = True
 
             if keyboard.is_pressed("esc"):
-                if vp.selection.source:
+                if VIEWPORT.scope.selection.source:
                     status_bar.standard_keys_help()
-                    vp.selection.source = None
-                    vp.render()
+                    VIEWPORT.scope.selection.source = None
+                    VIEWPORT.render()
                     
             if keyboard.is_pressed("ctrl+d"):
-                vp.duplicate_node()
+                VIEWPORT.scope.duplicate_node()
 
             # Side bar.
             if keyboard.is_pressed("tab"):
@@ -150,40 +154,39 @@ def main() -> None:
 
             # Run program.
             if keyboard.is_pressed("f1"):
-                vp.run_program()
+                VIEWPORT.run_program()
 
-        elif vp.edit_node_mode:
+        elif VIEWPORT.scope.edit_node_mode:
             
             # Exit edit mode.
             if keyboard.is_pressed("esc"):
-                vp.edit_node_mode = False
+                VIEWPORT.scope.edit_node_mode = False
                 status_bar.standard_keys_help()
                 
             # Side bar.
             if keyboard.is_pressed("tab"):
-                vp.edit_node_mode = False
+                VIEWPORT.scope.edit_node_mode = False
                 side_bar.focus()
                 status_bar.keys_help("NODES", side_bar.help_keys)
                 
             # Shift focused source.
             if keyboard.is_pressed("right") or keyboard.is_pressed("down"):
-                vp.shift_source_selection(pos.VerticalDirection.DOWN)
+                VIEWPORT.scope.shift_source_selection(measure.VerticalDirection.DOWN)
                 
             if keyboard.is_pressed("left") or keyboard.is_pressed("up"):
-                vp.shift_source_selection(pos.VerticalDirection.UP)
-                # vp.select_prev_node_source()
+                VIEWPORT.scope.shift_source_selection(measure.VerticalDirection.UP)
                 
             # Remove wire.
             if keyboard.is_pressed("backspace") or keyboard.is_pressed("del"):
-                vp.disconnect_source()
+                VIEWPORT.scope.disconnect_source()
             
             # Connect wire.
             if keyboard.is_pressed("space"):
-                vp.choose_source()
+                VIEWPORT.scope.choose_source()
             
             # Edit constant.
             if keyboard.is_pressed("c"):
-                vp.edit_constant()
+                VIEWPORT.scope.edit_constant()
       
 
 if __name__ == "__main__":
@@ -195,10 +198,12 @@ if __name__ == "__main__":
         helpers.flush_system_keyboard_buffer_win()
         exit()
         
-    # except Exception as internal_error:
-    #     style.clear_screen()
-    #     print(style.tcolor(" INTERNAL ERROR! ", color=style.AnsiFGColor.WHITE, bg_color=style.AnsiBGColor.RED))
-    #     print("\n" + str(internal_error))
-    #     helpers.flush_system_keyboard_buffer_win()
-    #     exit()
+    except Exception as internal_error:
+        style.clear_screen()
+        helpers.flush_system_keyboard_buffer_win()
+        
+        print(style.tcolor(" INTERNAL ERROR! ", color=style.AnsiFGColor.WHITE, bg_color=style.AnsiBGColor.RED))
+        print("\n" + str(internal_error))
+        print("\n" + traceback.print_tb(internal_error))
+        exit(1)
     

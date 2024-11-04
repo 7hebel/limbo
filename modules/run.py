@@ -1,7 +1,6 @@
 from modules import terminal
 from modules import style
 from modules import nodes
-from modules import types
 from modules import ui
 
 from dataclasses import dataclass

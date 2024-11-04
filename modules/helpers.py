@@ -19,6 +19,5 @@ def flush_system_keyboard_buffer_win() -> None:
         while msvcrt.kbhit():
             msvcrt.getch()
             
-    except ImportError:
+    except:
         return
-

@@ -1,6 +1,6 @@
 from modules import terminal
+from modules import measure
 from modules import chars
-from modules import pos
 
 from tcolorpy import tcolor, AnsiFGColor, AnsiBGColor, AnsiStyle
 from colorama import init, Fore, Back, Style
@@ -39,7 +39,7 @@ class BorderConnection:
     w: bool = False
     
 
-def outline_rect(rect: pos.Rect, connections: BorderConnection, dimmed: bool = False) -> None:
+def outline_rect(rect: measure.Rect, connections: BorderConnection, dimmed: bool = False) -> None:
     if dimmed:
         print(DIM, end="")
         

@@ -1,7 +1,7 @@
 from modules import terminal
+from modules import measure
 from modules import style
 from modules import chars
-from modules import pos
 from modules import ui
 
 from typing import TYPE_CHECKING
@@ -175,7 +175,7 @@ class SideBarComponent(ui.TextUIComponent):
         
         return self.__focused_object.build_instance()
     
-    def get_rect(self) -> pos.Rect | None:
+    def get_rect(self) -> measure.Rect | None:
         if self.is_folded:
             return None
             
@@ -185,7 +185,7 @@ class SideBarComponent(ui.TextUIComponent):
         if self.get_border_connections().e:
             w += 1
             
-        return pos.Rect(pos.Position(x, y), w, h)
+        return measure.Rect(measure.Position(x, y), w, h)
     
     def get_border_connections(self) -> style.BorderConnection:
         return style.BorderConnection(

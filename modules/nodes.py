@@ -1,10 +1,10 @@
 from modules.status_bar import status_bar
 from modules.side_bar import side_bar
 from modules import helpers
+from modules import measure
 from modules import types
 from modules import style
 from modules import chars
-from modules import pos
 
 from dataclasses import dataclass, replace as copy_src
 from collections.abc import Callable
@@ -225,7 +225,7 @@ class Node:
     inputs: list[NodeInput]
     outputs: list[NodeOutput]
     handler: Callable[[dict[str, NodeInput], dict[str, NodeOutput]], None]
-    position: pos.Position | None = None
+    position: measure.Position | None = None
     node_id: str = None
     factory: "NodeFactory | None" = None
 
@@ -255,12 +255,12 @@ class Node:
         return False
 
     @property
-    def rect(self) -> pos.Rect | None:
+    def rect(self) -> measure.Rect | None:
         if self.position is None:
             return None
 
         w, h = self.calc_output_size()
-        return pos.Rect(self.position, w, h)
+        return measure.Rect(self.position, w, h)
 
     @property
     def rel_flow_input_pos(self) -> tuple[int, int]:

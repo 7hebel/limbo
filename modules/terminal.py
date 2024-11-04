@@ -48,7 +48,7 @@ def get_cursor_pos() -> tuple[int, int]:
             raise RuntimeError("Unable to get cursor position.")
         
     else:  # Linux / MacOS
-        import re, sys, termios, tty
+        import re, termios, tty
 
         buff = ''
         stdin = sys.stdin.fileno()

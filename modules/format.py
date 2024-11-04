@@ -1,6 +1,6 @@
 from modules.status_bar import status_bar
+from modules import measure
 from modules import nodes
-from modules import pos
 
 import os
 
@@ -100,7 +100,7 @@ class LimbFormat:
 
             target_node = factory.build_instance()
             target_node.node_id = node_id
-            target_node.position = pos.Position(x, y)
+            target_node.position = measure.Position(x, y)
 
             return target_node
 

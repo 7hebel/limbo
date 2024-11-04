@@ -1,8 +1,8 @@
 from modules.side_bar import side_bar
 from modules import terminal
+from modules import measure
 from modules import chars
 from modules import style
-from modules import pos
 from modules import ui
 
 import re
@@ -42,7 +42,7 @@ class StatusBarComponent(ui.TextUIComponent):
         
         super().__init__()
 
-    def get_rect(self, force: bool = False) -> pos.Rect | None:
+    def get_rect(self, force: bool = False) -> measure.Rect | None:
         if self.msg_height == 0 and not force:
             return None
         
@@ -53,7 +53,7 @@ class StatusBarComponent(ui.TextUIComponent):
             x += side_bar.width
             w -= side_bar.width - 1
         
-        return pos.Rect(pos.Position(x, y), w, h)
+        return measure.Rect(measure.Position(x, y), w, h)
 
     def get_border_connections(self) -> style.BorderConnection:
         return style.BorderConnection(n = True)
