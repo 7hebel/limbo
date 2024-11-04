@@ -28,6 +28,14 @@ def main() -> None:
         if not terminal.is_active_window():
             continue
 
+        # Export state.
+        if keyboard.is_pressed("ctrl+e"):
+            vp.export_state()
+
+        # Import state.
+        if keyboard.is_pressed("ctrl+i"):
+            vp.import_state()
+
         # Sidebar.
         if keyboard.is_pressed("ctrl+b"):
             side_bar.unfocus()
@@ -193,3 +201,4 @@ if __name__ == "__main__":
     #     print("\n" + str(internal_error))
     #     helpers.flush_system_keyboard_buffer_win()
     #     exit()
+    

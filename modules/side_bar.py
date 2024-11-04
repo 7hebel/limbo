@@ -15,7 +15,6 @@ class SideBarComponent(ui.TextUIComponent):
         self.is_focused = False
         self.is_folded = False
         self.width = 22
-        self.scroll_y = 0
         self.__focused_object: "nodes.Collection | nodes.NodeFactory | None" = None
         self.in_factories_level: bool = False
         
@@ -229,7 +228,7 @@ class SideBarComponent(ui.TextUIComponent):
                         return index
                     
         return index if index >= 0 else 0
-            
+
     def render(self) -> None:
         content_rect = self.get_rect()
         if content_rect is None:
@@ -255,7 +254,8 @@ class SideBarComponent(ui.TextUIComponent):
             content = style.tcolor(icon, collection.color, styles=[style.AnsiStyle.DIM] if not self.is_focused else []) + " "
             content += style.tcolor(f"{collection.name}", collection.color, styles=styles)
             
-            terminal.set_cursor_pos(3, 2 + line_index - scroll_skip_indexes)
+            term_line = 2 + line_index - scroll_skip_indexes
+            terminal.set_cursor_pos(3, term_line)
             
             if self.overflowing_rows() == 0:
                 print(content)
@@ -274,7 +274,8 @@ class SideBarComponent(ui.TextUIComponent):
                     styles = [style.AnsiStyle.DIM] if not self.is_focused else [style.AnsiStyle.ITALIC, style.AnsiStyle.INVERT] if factory == self.__focused_object  else []
                     tree_char = chars.ROUNDED_LINE.vr if (i + 1) != len(collection.factories) else chars.ROUNDED_LINE.sw
 
-                    terminal.set_cursor_pos(5, 2 + line_index - scroll_skip_indexes)
+                    term_line = 2 + line_index - scroll_skip_indexes
+                    terminal.set_cursor_pos(5, term_line)
                     
                     if self.overflowing_rows() == 0:
                         print(style.tcolor(tree_char + "╴", collection.color, styles=[style.AnsiStyle.DIM] if not self.is_focused else []) + style.tcolor(factory.title, styles=styles) + node_type_indicator)

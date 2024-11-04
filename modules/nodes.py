@@ -226,7 +226,7 @@ class Node:
     outputs: list[NodeOutput]
     handler: Callable[[dict[str, NodeInput], dict[str, NodeOutput]], None]
     position: pos.Position | None = None
-    node_hash: str = None
+    node_id: str = None
     factory: "NodeFactory | None" = None
 
     def __post_init__(self) -> None:
@@ -236,8 +236,8 @@ class Node:
         for output_node in self.outputs:
             output_node.node = self
 
-        if self.node_hash is None:
-            self.node_hash = uuid.uuid4().hex
+        if self.node_id is None:
+            self.node_id = uuid.uuid4().hex
 
         if self.flow.enable_input:
             self.flow.input_src.node = self
@@ -249,10 +249,9 @@ class Node:
         if len(list(filter(lambda n_out: n_out.data_type != types.FLOW, self.outputs))) > 1:
             raise ValueError(f"Node: {self.title} contains over one NON-FLOW output!")
             
-
     def __eq__(self, value: "Node | Any") -> bool:
         if isinstance(value, Node):
-            return self.node_hash == value.node_hash
+            return self.node_id == value.node_id
         return False
 
     @property
@@ -315,6 +314,22 @@ class Node:
         if flow_controls:
             return flow_controls[0]
 
+    def get_output_src(self, name: str) -> NodeOutput | None:
+        if self.flow.enable_output and name == self.flow.output_src.name:
+            return self.flow.output_src
+        
+        for output_src in self.outputs:
+            if output_src.name == name:
+                return output_src
+
+    def get_input_src(self, name: str) -> NodeInput | None:
+        if self.flow.enable_input and name == self.flow.input_src.name:
+            return self.flow.input_src
+        
+        for input_src in self.inputs:
+            if input_src.name == name:
+                return input_src
+
 
 def connect_sources(s1: NodeInput | NodeOutput, s2: NodeInput | NodeOutput) -> None:
     """ Connect two node data sources. Perfroms basic validation. """
@@ -335,14 +350,6 @@ def connect_sources(s1: NodeInput | NodeOutput, s2: NodeInput | NodeOutput) -> N
     s1.connect(s2) if isinstance(s1, NodeOutput) else s2.connect(s1)
 
 
-# def connect_flow_sources(s1: NodeOutput | Node, s2: NodeOutput | Node) -> None:
-#     """ Connect two flow sources. Performs basic validation. """
-    
-#     if s1.node == s2.node:
-#         return status_bar.error(f"Cannot connect sources from the same node {style.node(s1.node)}")
-
-
-
 @dataclass
 class Collection:
     name: str
@@ -351,8 +358,8 @@ class Collection:
     def __post_init__(self) -> None:
         self.factories: list["NodeFactory"] = []
 
-    def __hash__(self) -> str:
-        return hash(f"{self.name}.{self.color}")
+    def __hash__(self) -> int:
+        return len(self.name) ** len(self.color.name)
 
     def register_factory(self, factory: "NodeFactory") -> None:
         self.factories.append(factory)
@@ -367,6 +374,9 @@ class NodesCollections(Enum):
     INTERACTION = Collection("Interaction", style.AnsiFGColor.GREEN)
 
 
+factories_register: dict[str: "NodeFactory"] = {}
+
+
 @dataclass
 class NodeFactory:
     title: str
@@ -376,11 +386,17 @@ class NodeFactory:
     outputs: list[NodeOutput]
     handler: Callable[[dict[str, NodeInput], dict[str, NodeOutput]], None]
     singleton: bool = False
+    factory_id: str = None
 
     def __post_init__(self) -> None:
         self.instances: list[Node] = []
         self.collection = self.collection.value
+        
+        if self.factory_id is None:
+            self.factory_id = f"std/{self.title}:{hash(self.collection)}"
+        
         self.collection.register_factory(self)
+        factories_register[self.factory_id] = self
 
     def build_instance(self) -> Node | None:
         if self.singleton and self.instances:

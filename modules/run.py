@@ -34,9 +34,9 @@ class RuntimeNode:
                     self.in_sources[raw_input.name] = raw_input.constant_value
                 continue
 
-            rt_output_node = all_nodes.get(output_source.node.node_hash)
+            rt_output_node = all_nodes.get(output_source.node.node_id)
             if rt_output_node is None:
-                raise RuntimeError(f"Expected initialized Runtime node of hash: {output_source.node.node_hash} as input source for {self.name}")
+                raise RuntimeError(f"Expected initialized Runtime node of hash: {output_source.node.node_id} as input source for {self.name}")
 
             self.in_sources[raw_input.name] = RuntimeSourcePtr(output_source.name, rt_output_node)
 
@@ -45,16 +45,15 @@ class RuntimeNode:
             if input_target is None:
                 continue
 
-            rt_input_node = all_nodes.get(input_target.node.node_hash)
+            rt_input_node = all_nodes.get(input_target.node.node_id)
             if rt_input_node is None:
-                raise RuntimeError(f"Expected initialized Runtime node of hash: {input_target.node.node_hash} as output target for {self.name}")
+                raise RuntimeError(f"Expected initialized Runtime node of hash: {input_target.node.node_id} as output target for {self.name}")
 
-            # target_id = input_target.name if isinstance(input_target, nodes.NodeInput) else input_target.node_hash
             self.out_sources[raw_output.name] = RuntimeSourcePtr(input_target.name, rt_input_node)
 
         if self.node_model.flow.enable_output:
             if self.node_model.flow.output_src.target is not None:
-                self.flow_next = all_nodes.get(self.node_model.flow.output_src.target.node.node_hash)
+                self.flow_next = all_nodes.get(self.node_model.flow.output_src.target.node.node_id)
 
         if self.flow_next is None and self.out_sources:
             self.flow_next = list(self.out_sources.values())[0].rt_node
@@ -96,12 +95,12 @@ class NodeRunner:
     def initialize_nodes(self, start_node: nodes.Node, raw_nodes: list[nodes.Node]) -> None:
         for raw_node in raw_nodes:
             rt_node = RuntimeNode(raw_node)
-            self.runtime_nodes[raw_node.node_hash] = rt_node
+            self.runtime_nodes[raw_node.node_id] = rt_node
 
         for rt_node in self.runtime_nodes.values():
             rt_node.initialize(self.runtime_nodes)
 
-        self.entry_node = self.runtime_nodes[start_node.node_hash]
+        self.entry_node = self.runtime_nodes[start_node.node_id]
 
     def run(self):
         style.clear_screen()

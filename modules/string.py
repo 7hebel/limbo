@@ -4,9 +4,6 @@ from dataclasses import dataclass
 from typing import Generator
 
 
-BREAK_LINE = "\n"
-
-
 @dataclass
 class _CharData:
     char: str
@@ -30,11 +27,11 @@ class ColoredStringObject:
             self.feed_char(char, color, styles)
     
     def break_line(self) -> None:
-        self.content.append(BREAK_LINE)
+        self.content.append("\n")
         
     def stream_chars(self) -> Generator[str, None, None]:
         for char_data in self.content:
-            if char_data == BREAK_LINE:
+            if char_data == "\n":
                 yield char_data
                 continue
             
@@ -44,11 +41,11 @@ class ColoredStringObject:
         start_x = x
 
         for char in self.stream_chars():
-            if char == BREAK_LINE:
+            if char == "\n":
                 y += 1
                 x = start_x
                 continue
             
             yield (char, (x, y))
             x += 1
-                
+            

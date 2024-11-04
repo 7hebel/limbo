@@ -5,6 +5,7 @@ import pygetwindow
 import threading
 import keyboard
 import time
+import sys
 import os
 
 
@@ -14,6 +15,61 @@ MIN_W, MIN_H = 124, 33
 
 def set_cursor_pos(x: int, y: int) -> None:
     print(f"\033[{y};{x}H", end="")
+
+
+def get_cursor_pos() -> tuple[int, int]:
+    if os.name == 'nt':  # Windows.
+        import ctypes
+
+        class COORD(ctypes.Structure):
+            _fields_ = [("X", ctypes.c_short), ("Y", ctypes.c_short)]
+
+        class CONSOLE_SCREEN_BUFFER_INFO(ctypes.Structure):
+            _fields_ = [
+                ("dwSize", COORD),
+                ("dwCursorPosition", COORD),
+                ("wAttributes", ctypes.c_ushort),
+                ("srWindow", ctypes.c_short * 4),
+                ("dwMaximumWindowSize", COORD)
+            ]
+
+        # Get the console handle
+        STD_OUTPUT_HANDLE = -11
+        console_handle = ctypes.windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
+
+        csbi = CONSOLE_SCREEN_BUFFER_INFO()
+        success = ctypes.windll.kernel32.GetConsoleScreenBufferInfo(
+            console_handle, ctypes.byref(csbi)
+        )
+
+        if success:
+            return csbi.dwCursorPosition.X, csbi.dwCursorPosition.Y
+        else:
+            raise RuntimeError("Unable to get cursor position.")
+        
+    else:  # Linux / MacOS
+        import re, sys, termios, tty
+
+        buff = ''
+        stdin = sys.stdin.fileno()
+        tattr = termios.tcgetattr(stdin)
+
+        try:
+            tty.setcbreak(stdin, termios.TCSANOW)
+            sys.stdout.write('\033[6n')
+            sys.stdout.flush()
+
+            while True:
+                buff += sys.stdin.read(1)
+                if buff[-1] == 'R': break
+        finally:
+            termios.tcsetattr(stdin, termios.TCSANOW, tattr)
+
+        matches = re.match(r'^\033\[(\d*);(\d*)R', buff)
+        if matches == None: return None
+
+        groups = matches.groups()
+        return (int(groups[0]), int(groups[1]))
 
 
 def hide_cursor():
@@ -88,4 +144,3 @@ if get_w() < MIN_W or get_h() < MIN_H:
         
 _listener = threading.Thread(target=term_size_listener, daemon=True)
 _listener.start()
-        

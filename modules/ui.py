@@ -62,7 +62,7 @@ class TextUIComponent(ABC):
             for x in xrange:
                 terminal.set_cursor_pos(x, y)
                 print(" ", end="")
-                
+         
     def draw_borders(self) -> None:
         """ Draw borders inside component's rectangle. """
         rect = self.get_rect()

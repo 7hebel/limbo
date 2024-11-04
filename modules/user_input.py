@@ -1,6 +1,4 @@
 from modules import terminal
-from modules import style
-from modules import ui
 
 import keyboard
 import time

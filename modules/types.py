@@ -1,7 +1,6 @@
 from modules import style
 
 from dataclasses import dataclass
-from typing import Any
 
 
 @dataclass
@@ -14,7 +13,6 @@ class DataType:
 TEXT = DataType("Text", style.AnsiFGColor.YELLOW, str)
 NUMBER = DataType("Number", style.AnsiFGColor.MAGENTA, float)
 BOOLEAN = DataType("Boolean", style.AnsiFGColor.BLUE, bool)
-
 FLOW = DataType("Flow", style.FLOW_CONTROL_COLOR, None)
 
 

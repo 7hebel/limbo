@@ -19,7 +19,7 @@ class WireBuilder:
             
             self.avoid_rects.append(rect_copy)
         
-        # Ensure wire not going below node's border.
+        # Ensure wire is not going below node's border.
         start = (start[0] + 1, start[1])
         end = (end[0] - 1, end[1])
         
@@ -232,5 +232,4 @@ class WireBuilder:
         # Fill horizontal line.
         for x in range(ex + 1, sx):
             self.positioned_chars[(x, sy)] = self.charset.hz
-            
             
