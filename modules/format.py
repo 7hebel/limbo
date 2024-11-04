@@ -1,8 +1,7 @@
 from modules.status_bar import status_bar
 from modules import measure
 from modules import nodes
-
-import os
+from modules import style
 
 
 def read_until_seq(data: bytes | None, end_seq: bytes) -> tuple[bytes, bytes] | tuple[None, None]:
@@ -36,9 +35,6 @@ class LimbFormat:
 
     @staticmethod
     def import_state(path: str) -> list[nodes.Node]:
-        if not os.path.exists(path):
-            return status_bar.error(f"Couldn't import state from file: {path} (file not found)")
-
         saved_nodes: list[nodes.Node] = []
         unlinked_wires: list[bytes] = []
         unattached_consts: list[bytes] = []
@@ -75,13 +71,13 @@ class LimbFormat:
                     unattached_consts.append(constant_data)
             
             except BufferError:
-                return status_bar.error(f"Parsing {path}: failed to read node (left with: {node_data})")
+                return status_bar.error(f"Parsing {style.highlight(path)}: failed to read node (left with: {node_data})")
 
             if node_data:
-                return status_bar.error(f"Parsing {path} failed: expected end of line, left with: {node_data}")
+                return status_bar.error(f"Parsing {style.highlight(path)} failed: expected end of line, left with: {node_data}")
 
             if is_std not in (LimbFormat.TRUE, LimbFormat.FALSE):
-                return status_bar.error(f"Parsing {path}: invalid node's StdByte.")
+                return status_bar.error(f"Parsing {style.highlight(path)}: invalid node's StdByte.")
 
             is_std = is_std == LimbFormat.TRUE
             node_id = node_id.decode()
@@ -96,7 +92,7 @@ class LimbFormat:
 
             factory: nodes.NodeFactory = nodes.factories_register.get(factory_id)
             if factory is None:
-                return status_bar.error(f"Parsing {path} failed due to invalid FactoryID found: {factory_id} ({nodes.factories_register.keys()})")
+                return status_bar.error(f"Parsing {style.highlight(path)} failed due to invalid FactoryID found: {factory_id} ({nodes.factories_register.keys()})")
 
             target_node = factory.build_instance()
             target_node.node_id = node_id
@@ -112,10 +108,10 @@ class LimbFormat:
         def link_connection(wire_data: bytes) -> bool | None:
             """ \W 59ebd926f0c34838ac5800ee89f3dadf/(FlowOut) > c1fad08a82974f51808d7541b7c0837c/(FlowIn) END """
             if not wire_data.startswith(LimbFormat.WIRE_HEADER):
-                return status_bar.error(f"Parsing {path} failed due to invalid connection header at wire: {wire_data}")
+                return status_bar.error(f"Parsing {style.highlight(path)} failed due to invalid connection header at wire: {wire_data}")
             
             if LimbFormat.PTR not in wire_data:
-                return status_bar.error(f"Parsing {path} failed due to missing connection pointer at: {wire_data}")
+                return status_bar.error(f"Parsing {style.highlight(path)} failed due to missing connection pointer at: {wire_data}")
             
             wire_data = wire_data.removeprefix(LimbFormat.WIRE_HEADER)
             out_data, in_data = wire_data.split(LimbFormat.PTR)
@@ -126,37 +122,37 @@ class LimbFormat:
             
             out_node = get_node(out_nodeid)
             if out_node is None:
-                return status_bar.error(f"Parsing {path} failed due to missing output source node: {out_nodeid}")
+                return status_bar.error(f"Parsing {style.highlight(path)} failed due to missing output source node: {out_nodeid}")
             
             in_node = get_node(in_nodeid)
             if in_node is None:
-                return status_bar.error(f"Parsing {path} failed due to missing input source node: {in_nodeid}")
+                return status_bar.error(f"Parsing {style.highlight(path)} failed due to missing input source node: {in_nodeid}")
             
             out_src = out_node.get_output_src(out_src)
             if out_src is None:
-                return status_bar.error(f"Parsing {path} failed due to missing output source: {out_nodeid}/{out_src}")
+                return status_bar.error(f"Parsing {style.highlight(path)} failed due to missing output source: {out_nodeid}/{out_src}")
 
             in_src = in_node.get_input_src(in_src)
             if in_src is None:
-                return status_bar.error(f"Parsing {path} failed due to missing input source: {in_nodeid}/{in_src}")
+                return status_bar.error(f"Parsing {style.highlight(path)} failed due to missing input source: {in_nodeid}/{in_src}")
                 
             nodes.connect_sources(out_src, in_src)
             return True
 
         def set_constant(constant_data: bytes) -> None:
             if LimbFormat.PTR not in constant_data:
-                return status_bar.error(f"Parsing {path} failed due to missing pointer at constant: {constant_data}")
+                return status_bar.error(f"Parsing {style.highlight(path)} failed due to missing pointer at constant: {constant_data}")
                 
             src_path, value = constant_data.split(LimbFormat.PTR)
             node_id, input_name = src_path.decode().split("/", 1)
             
             node = get_node(node_id)
             if node is None:
-                return status_bar.error(f"Parsing {path} failed due to missing constant source node: {node_id}")
+                return status_bar.error(f"Parsing {style.highlight(path)} failed due to missing constant source node: {node_id}")
             
             input_src = node.get_input_src(input_name)
             if input_src is None:
-                return status_bar.error(f"Parsing {path} failed due to missing constant input source: {input_name}")
+                return status_bar.error(f"Parsing {style.highlight(path)} failed due to missing constant input source: {input_name}")
             
             input_src.set_constant(value.decode())
             return True
@@ -164,10 +160,10 @@ class LimbFormat:
         with open(path, "rb") as file:
             header = file.readline().removesuffix(LimbFormat.SEP)
             if header != LimbFormat.FILE_HEADER:
-                return status_bar.error(f"Couldn't import state from file: {path} (invalid file header)")
+                return status_bar.error(f"Couldn't import state from file: {style.highlight(path)} (invalid file header)")
 
             if LimbFormat.EOF not in file.read():
-                return status_bar.error(f"Couldn't import state from file: {path} (no EOF byte found)")
+                return status_bar.error(f"Couldn't import state from file: {style.highlight(path)} (no EOF byte found)")
 
             file.seek(0)
 
@@ -190,7 +186,7 @@ class LimbFormat:
             if not set_constant(constant_data):
                 return
 
-        status_bar.set_message(f"Succesfully imported {len(saved_nodes)} nodes")
+        status_bar.set_message(f"Succesfully imported {style.highlight(f'{len(saved_nodes)} nodes')}.")
         return saved_nodes
 
 
@@ -280,6 +276,6 @@ class LimbFormat:
         with open(path, "wb+") as file:
             file.write(content)
 
-        status_bar.set_message(f"Saved into: {path}")
+        status_bar.set_message(f"Saved into: {style.highlight(path)}")
 
 

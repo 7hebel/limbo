@@ -2,14 +2,17 @@ from modules.status_bar import status_bar
 from modules import helpers
 from modules import measure
 from modules import vp_ext
+from modules import format
 from modules import nodes
 from modules import types
 from modules import style
 from modules import chars
+from modules import ui
 
 from typing import TYPE_CHECKING, Self
 from collections.abc import Callable
 from dataclasses import dataclass
+import os
 
 if TYPE_CHECKING:
     from modules.viewport import ViewportComponent
@@ -23,9 +26,8 @@ class SelectionState:
 
 
 class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
-    def __init__(self, name: str, dest_file: str | None = None) -> None:
+    def __init__(self, name: str) -> None:
         self.name = name
-        self.associated_file = dest_file
         
         self.nodes: list[nodes.Node] = []
         self.camera = measure.Camera(0, 0)
@@ -33,7 +35,10 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         
         self.render: Callable[[None], None] | None = None
         self.viewport: "ViewportComponent | None" = None
-        self.__edit_node_mode = False
+
+        self.__edit_node_mode: bool = False
+        self.__associated_file: str | None = None
+        self.__is_saved: bool = False
       
     def initialize(self, viewport: "ViewportComponent") -> Self:
         self.viewport = viewport
@@ -70,7 +75,46 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         if self.render is not None:
             self.render()
         
+    def associate_file(self, path: str) -> None:
+        """ Link file with this workspace. """
+        self.__associated_file = path
+        self.__is_saved = True
+        self.name = os.path.basename(path)
+        ui.render_all()
+        
+    def export_state(self) -> None:
+        """ Export current state into file. If no file is associated with this workspace, asks for path and links it. """
+        path = self.__associated_file
+        
+        if path is None:
+            path = self.viewport.prompt("Export path", "")
+            if path is None:
+                return
+            
+            self.associate_file(path)
+        
+        format.LimbFormat.export(self.nodes, path)
+        self.__is_saved = True
+        
+    def renderable_title(self) -> tuple[str, int]:
+        """ Return styled version of workspace's name including singal chars and it's real length. """
+        if self.__associated_file is None or not self.name:
+            return ("", 0)
+        
+        indicator = " "
+        total_length = len(self.name) + 2
+        
+        if not self.__is_saved:
+            indicator += style.tcolor("* ", style.AnsiFGColor.YELLOW, styles=[style.AnsiStyle.BLINK])
+            total_length += 2
+        
+        return (indicator + style.tcolor(self.name, styles=[style.AnsiStyle.ITALIC]) + " ", total_length)
+        
     def add_node(self, node: nodes.Node) -> None:
+        """ 
+        Add new node to the workspace. If it has no position set, 
+        it will position it at the center avoiding collision with other nodes.
+        """
         if node.position is None:
             node.position = self.camera.get_pos()
 
@@ -80,6 +124,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         if self.node_intersects():
             self.move_node_right()
 
+        self.__is_saved = False
         self.render()
         
     def remove_node(self) -> None:
@@ -99,6 +144,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         self.nodes.remove(node)
 
         self.selection.node = self.nodes[0] if self.nodes else None
+        self.__is_saved = False
         self.render()
         return status_bar.set_message(f"Removed {style.node(node)}")
 
@@ -130,6 +176,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
             return
 
         self.selection.highlighted_source.disconnect()
+        self.__is_saved = False
         self.render()
         
     def choose_source(self) -> None:
@@ -166,6 +213,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         }
         status_bar.keys_help("Edit constant.", edit_help)
 
+        self.__is_saved = False
         current_value = self.selection.highlighted_source.constant_value or ""
         value = self.viewport.prompt(style.source(self.selection.highlighted_source), current_value)
         self.selection.highlighted_source.set_constant(value)

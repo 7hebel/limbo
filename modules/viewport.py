@@ -15,6 +15,8 @@ from modules import types
 from modules import run
 from modules import ui
 
+import os
+
 
 class ViewportComponent(ui.TextUIComponent):
     def __init__(self, scope: workspace.Workspace) -> None:
@@ -185,22 +187,29 @@ class ViewportComponent(ui.TextUIComponent):
     def render(self):
         self.clean_contents()
         camera_rect = self.get_cameraview_rect()
+        vp_rect = self.get_rect()
 
+        # Workspace name.
+        title, title_length = self.scope.renderable_title()
+        
+        if title_length > 0 and title_length < vp_rect.w - 2:
+            center_x = vp_rect.pos.x + (vp_rect.w // 2) - (title_length // 2)
+            terminal.write_at(title, center_x, 0)
+
+        # Draw data wires.
         for node in self.scope.nodes:
-            # Draw data wires.
             for output in node.outputs + [node.flow.output_src]:
-                if output is None:
+                if output is None or output.target is None:
                     continue
                 
-                if output.target:
-                    rel_start = output.rel_pos
-                    rel_end = output.target_rel_pos
+                rel_start = output.rel_pos
+                rel_end = output.target_rel_pos
 
-                    dimmed = not (node == self.scope.selection.node or output.target.node == self.scope.selection.node)
-                    selected = self.scope.edit_node_mode and self.scope.selection.highlighted_source in (output, output.target)
-                    charset = chars.DOUBLE_LINE if output.data_type == types.FLOW else chars.ROUNDED_LINE if not selected else chars.ROUNDED_DOTTED
+                dimmed = not (node == self.scope.selection.node or output.target.node == self.scope.selection.node)
+                selected = self.scope.edit_node_mode and self.scope.selection.highlighted_source in (output, output.target)
+                charset = chars.DOUBLE_LINE if output.data_type == types.FLOW else chars.ROUNDED_LINE if not selected else chars.ROUNDED_DOTTED
 
-                    self.draw_wire(rel_start, rel_end, charset, [node.rect, output.target.node.rect], output.data_type.color, dimmed, selected)
+                self.draw_wire(rel_start, rel_end, charset, [node.rect, output.target.node.rect], output.data_type.color, dimmed, selected)
 
         # Draw nodes.
         for node in self.scope.nodes:
@@ -211,8 +220,7 @@ class ViewportComponent(ui.TextUIComponent):
             
             for char, (c_x, c_y) in string_object.stream_positioned_chars(x, y):
                 if self.work_rect().contains_point(c_x, c_y):
-                    terminal.set_cursor_pos(c_x, c_y)
-                    print(char)
+                    terminal.write_at(char, c_x, c_y)
 
     def run_program(self) -> None:
         if not nodes.builtin.START_FACTORY.instances:
@@ -229,17 +237,15 @@ class ViewportComponent(ui.TextUIComponent):
         start_node = nodes.builtin.START_FACTORY.instances[0]
         run.NodeRunner(start_node, self.scope.nodes).run()
 
-    def export_state(self) -> None:
-        path = self.prompt("Export path", "")
+    def import_state(self, path: str | None) -> None:
+        if path is None:
+            path = self.prompt("Import path", "")
+        
         if path is None:
             return
         
-        format.LimbFormat.export(self.scope.nodes, path)
-
-    def import_state(self) -> None:
-        path = self.prompt("Import path", "")
-        if path is None:
-            return
+        if not os.path.exists(path):
+            return status_bar.error(f"Couldn't import state from file: {path} (file not found)")
         
         self.scope.remove_node()
         for node in self.scope.nodes:
@@ -257,4 +263,7 @@ class ViewportComponent(ui.TextUIComponent):
         
         for node in imported_nodes:
             self.scope.add_node(node)
-            
+
+        self.scope.associate_file(path)
+
+        

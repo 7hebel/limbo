@@ -17,6 +17,11 @@ def set_cursor_pos(x: int, y: int) -> None:
     print(f"\033[{y};{x}H", end="")
 
 
+def write_at(content: str, x: int, y: int) -> None:
+    set_cursor_pos(x, y)
+    print(content)
+
+
 def get_cursor_pos() -> tuple[int, int]:
     if os.name == 'nt':  # Windows.
         import ctypes

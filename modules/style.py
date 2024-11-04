@@ -82,7 +82,6 @@ def key(key_name: str) -> str:
 
 def node(node) -> str:
     color = node.color if hasattr(node, "color") else node.collection.color
-    
     return tcolor(f"[{node.title}]", color or None)
     
 
@@ -92,4 +91,8 @@ def datatype(dt) -> str:
     
 def source(src) -> str:
     return node(src.node) + tcolor("::", AnsiFGColor.LBLACK) + src.name + datatype(src.data_type)
+    
+
+def highlight(content: str) -> str:
+    return tcolor(content, AnsiFGColor.MAGENTA, styles=[AnsiStyle.ITALIC])
     

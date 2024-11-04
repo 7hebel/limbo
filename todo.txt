@@ -1,15 +1,6 @@
-attach filepath to file after import
-add py main.py FILEPATH to auto import
-
-remove all nodes function to workspace
-
 cleanup vp_ext
 
-workspace name at the border top of viewport
-
 use math.dist() to choose the closest node while shifting focus 
-
-move node conencted methods to the NodeManager class
 
 render node only if haschanged
 store previous RECT in cache with state and clean this rect, not new one
@@ -22,9 +13,10 @@ to .exe???
 
 better sidebar rendering
 
+
 NODES:
 files nodes category
-variables???
+key-value storage nodes (save, get etc.) AS VARIABLES
+back to start (restart)
 custom nodes
-back to start
 clean screen

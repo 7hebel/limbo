@@ -4,6 +4,7 @@ from modules import workspace
 from modules import viewport
 from modules import terminal
 from modules import helpers
+from modules import nodes
 from modules import measure
 from modules import style
 from modules import ui
@@ -11,17 +12,22 @@ from modules import ui
 import traceback
 import keyboard
 import time
-
+import sys
+    
 terminal.hide_cursor()
 
-
-default_workspace = workspace.Workspace("<default>")
+default_workspace = workspace.Workspace("")
 VIEWPORT = viewport.ViewportComponent(default_workspace)
+
+# Import state file.
+if len(sys.argv) > 1:
+    VIEWPORT.import_state(sys.argv[1])
+    
+else:
+    default_workspace.add_node(nodes.builtin.START_FACTORY.build_instance())
 
 
 def main() -> None:    
-    # start_node = nodes.builtin.START_FACTORY.build_instance()    
-    # VIEWPORT.scope.add_node(start_node)
     ui.render_all()
 
     status_bar.standard_keys_help()
@@ -34,7 +40,7 @@ def main() -> None:
 
         # Export state.
         if keyboard.is_pressed("ctrl+e"):
-            VIEWPORT.export_state()
+            VIEWPORT.scope.export_state()
 
         # Import state.
         if keyboard.is_pressed("ctrl+i"):
@@ -203,7 +209,6 @@ if __name__ == "__main__":
         helpers.flush_system_keyboard_buffer_win()
         
         print(style.tcolor(" INTERNAL ERROR! ", color=style.AnsiFGColor.WHITE, bg_color=style.AnsiBGColor.RED))
-        print("\n" + str(internal_error))
-        print("\n" + traceback.print_tb(internal_error))
+        traceback.print_exc()
         exit(1)
     
