@@ -1,6 +1,21 @@
 from modules.nodes import *
 from modules import types
 
+# Equal.
+def string_eq(ins: dict[str, str]) -> dict[str, bool]:
+    a = ins.get("a")
+    b = ins.get("b")
+    return {"equal": a == b}
+
+NodeFactory(
+    title="Equal",
+    collection=NodesCollections.STRINGS,
+    flow=FlowControl(False),
+    inputs=[NodeInput("a", types.TEXT), NodeInput("b", types.TEXT)],
+    outputs=[NodeOutput("equal", types.BOOLEAN)],
+    handler=string_eq,
+)
+
 # Length.
 def length_string(ins: dict[str, str]) -> dict[str, int]:
     text = ins.get("text")

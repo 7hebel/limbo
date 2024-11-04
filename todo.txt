@@ -1,20 +1,23 @@
 attach filepath to file after import
-str eq node
+add py main.py FILEPATH to auto import
+
+use math.dist() to choose the closest node while shifting focus 
 
 move node conencted methods to the NodeManager class
 
 render node only if haschanged
 store previous RECT in cache with state and clean this rect, not new one
 
-add py main.py FILEPATH to auto import
-
 mutliple windows?
 
 no special chars in node names / sources
 
-custom nodes
-
-files nodes category
-
-variables???
 to .exe???
+
+
+NODES:
+files nodes category
+variables???
+custom nodes
+back to start
+clean screen

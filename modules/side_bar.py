@@ -46,7 +46,7 @@ class SideBarComponent(ui.TextUIComponent):
     def focus(self) -> None:
         self.is_folded = False
         self.is_focused = True
-        ui.render_all()
+        self.render()
         
     def unfocus(self) -> None:
         self.is_focused = False
@@ -201,6 +201,7 @@ class SideBarComponent(ui.TextUIComponent):
         total_rows = 0
         for collection, is_folded in self.collections_folds.items():
             total_rows += 1
+            
             if not is_folded:
                 total_rows += len(collection.factories)
                 
@@ -235,19 +236,20 @@ class SideBarComponent(ui.TextUIComponent):
             return
     
         content_rect.pos.x += 1
+        content_rect.w -= 1
         self.clean_contents(content_rect)
     
         visible_rows = self.total_rows() - self.overflowing_rows()
         scroll_range = range(0, visible_rows)
 
-        if self.focused_object_index() + 1 >= visible_rows:
+        if self.focused_object_index() + 1 > visible_rows:
             scroll_y = self.focused_object_index() - visible_rows + 1
             scroll_range = range(scroll_y, visible_rows + scroll_y)
-
+            
         line_index = 0
         scroll_skip_indexes = 0
         
-        for index, (collection, is_folded) in enumerate(self.collections_folds.items()):
+        for collection, is_folded in self.collections_folds.items():
             icon = chars.COLLECTION_FOLDED if is_folded else chars.COLLECTION_UNFOLDED
             styles = [style.AnsiStyle.DIM] if not self.is_focused else [style.AnsiStyle.ITALIC, style.AnsiStyle.INVERT] if self.__focused_object == collection else []
             
@@ -257,9 +259,7 @@ class SideBarComponent(ui.TextUIComponent):
             term_line = 2 + line_index - scroll_skip_indexes
             terminal.set_cursor_pos(3, term_line)
             
-            if self.overflowing_rows() == 0:
-                print(content)
-            elif index in scroll_range:
+            if line_index in scroll_range:
                 print(content)
             else:
                 scroll_skip_indexes += 1
@@ -277,10 +277,9 @@ class SideBarComponent(ui.TextUIComponent):
                     term_line = 2 + line_index - scroll_skip_indexes
                     terminal.set_cursor_pos(5, term_line)
                     
-                    if self.overflowing_rows() == 0:
-                        print(style.tcolor(tree_char + "╴", collection.color, styles=[style.AnsiStyle.DIM] if not self.is_focused else []) + style.tcolor(factory.title, styles=styles) + node_type_indicator)
-                    elif line_index in scroll_range:
-                        print(style.tcolor(tree_char + "╴", collection.color, styles=[style.AnsiStyle.DIM] if not self.is_focused else []) + style.tcolor(factory.title, styles=styles) + node_type_indicator)
+                    content = style.tcolor(tree_char + "╴", collection.color, styles=[style.AnsiStyle.DIM] if not self.is_focused else []) + style.tcolor(factory.title, styles=styles) + node_type_indicator
+                    if line_index in scroll_range:
+                        print(content)
                     else:
                         scroll_skip_indexes += 1
 
