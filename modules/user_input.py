@@ -56,9 +56,16 @@ def get_input(prompt: str = "", max_len: int = 0, allow_cancel: bool = False, pl
 
     listener = keyboard.on_press(handle_key, False)
 
-    while not finished:
-        time.sleep(0.1)
-    
+    try:
+        while not finished:
+            time.sleep(0.1)
+            
+    except KeyboardInterrupt:
+        keyboard.unhook(listener)
+        terminal.hide_cursor()
+        print("")
+        raise
+        
     keyboard.unhook(listener)
     terminal.hide_cursor()
     print("")

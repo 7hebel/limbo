@@ -100,6 +100,7 @@ def wait_for_enter() -> None:
     
     while True:
         if keyboard.is_pressed("enter") and is_active_window():
+            hide_cursor()
             return
         
         time.sleep(0.1)

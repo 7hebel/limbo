@@ -8,7 +8,6 @@ from modules import measure
 from modules import helpers
 from modules import string
 from modules import format
-from modules import vp_ext
 from modules import chars
 from modules import style
 from modules import nodes
@@ -228,7 +227,7 @@ class ViewportComponent(ui.TextUIComponent):
                     terminal.write_at(char, c_x, c_y)
 
     def run_program(self) -> None:
-        if not nodes.builtin.START_FACTORY.instances:
+        if not nodes.builtin.START_FACTORY.instances[self.scope.id]:
             return status_bar.error(f"Missing {style.node(nodes.builtin.START_FACTORY)} node!")
 
         for node in self.scope.nodes:
@@ -240,7 +239,7 @@ class ViewportComponent(ui.TextUIComponent):
                     return status_bar.error(f"Undefined required value: {style.source(input_source)}")
 
         style.clear_screen()
-        start_node = nodes.builtin.START_FACTORY.instances[0]
+        start_node = nodes.builtin.START_FACTORY.instances[self.scope.id][0]
         run.NodeRunner(start_node, self.scope.nodes).run()
 
     def import_state(self, path: str | None = None) -> None:
@@ -253,23 +252,24 @@ class ViewportComponent(ui.TextUIComponent):
         if not os.path.exists(path):
             return status_bar.error(f"Couldn't import state from file: {path} (file not found)")
         
-        self.scope.remove_node()
-        for node in self.scope.nodes:
-            self.scope.selection.node = node
-            self.scope.remove_node()
+        # Temporarily disable rendering.
+        renderer = self.render
+        self.render = lambda: None
+        
+        old_scope = self.scope
+        self.scope = workspace.Workspace("").initialize(self)
+        self.scope.associate_file(path)
+        side_bar.set_workspace_id(self.scope.id)
             
-        self.scope.selection.node = None
-        self.scope.selection.source = None
-        self.scope.selection.highlighted_source = None
-        self.scope.edit_node_mode = False
-            
-        imported_nodes = format.LimbFormat.import_state(path)
+        imported_nodes = format.LimbFormat.import_state(path, self.scope.id)
         if imported_nodes is None:
-            return
+            self.scope = old_scope
+            self.render = renderer
+            return ui.render_all()
         
         for node in imported_nodes:
             self.scope.add_node(node)
 
-        self.scope.associate_file(path)
-
-        
+        self.render = renderer
+        self.scope.render = renderer
+        self.render()

@@ -15,8 +15,9 @@ class SideBarComponent(ui.TextUIComponent):
         self.is_focused = False
         self.is_folded = False
         self.width = 22
-        self.__focused_object: "nodes.Collection | nodes.NodeFactory | None" = None
         self.in_factories_level: bool = False
+        self.__focused_object: "nodes.Collection | nodes.NodeFactory | None" = None
+        self.__workspace_id: str | None = None
         
         self.collections_folds: dict["nodes.Collection", bool] = {}
         self.collections_array: list["nodes.Collection"] = []
@@ -37,6 +38,9 @@ class SideBarComponent(ui.TextUIComponent):
         }
         
         self.__focused_object = self.collections_array[0]
+        
+    def set_workspace_id(self, workspace_id: str) -> None:
+        self.__workspace_id = workspace_id
         
     def flip(self) -> None:
         """ Flip is_folded value. """
@@ -173,7 +177,10 @@ class SideBarComponent(ui.TextUIComponent):
         if not self.in_factories_level:
             return None
         
-        return self.__focused_object.build_instance()
+        if self.__workspace_id is None:
+            raise RuntimeError("cannot spawn node without workspace_id linked.")
+        
+        return self.__focused_object.build_instance(self.__workspace_id)
     
     def get_rect(self) -> measure.Rect | None:
         if self.is_folded:

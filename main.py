@@ -18,13 +18,14 @@ terminal.hide_cursor()
 
 default_workspace = workspace.Workspace("")
 VIEWPORT = viewport.ViewportComponent(default_workspace)
+side_bar.set_workspace_id(default_workspace.id)
 
 # Import state file.
 if len(sys.argv) > 1:
     VIEWPORT.import_state(sys.argv[1])
     
 else:
-    default_workspace.add_node(nodes.builtin.START_FACTORY.build_instance())
+    default_workspace.add_node(nodes.builtin.START_FACTORY.build_instance(default_workspace.id))
 
 
 def main() -> None:    

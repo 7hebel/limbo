@@ -291,7 +291,9 @@ class Node:
         if self.flow.enable_output:
             self.flow.output_src.disconnect()
             
-        self.factory.instances.remove(self)
+        for workspace_id in self.factory.instances.keys():
+            if self in self.factory.instances[workspace_id]:
+                self.factory.instances[workspace_id].remove(self)
 
     def get_selectable_flow_controls(self) -> list[NodeInput | NodeOutput]:
         flows_ctrls = []
@@ -397,7 +399,7 @@ class NodeFactory:
     factory_id: str = None
 
     def __post_init__(self) -> None:
-        self.instances: list[Node] = []
+        self.instances: dict[str, list[Node]] = {}  # List of built instances per workspace
         self.collection = self.collection.value
         
         if self.factory_id is None:
@@ -406,9 +408,12 @@ class NodeFactory:
         self.collection.register_factory(self)
         factories_register[self.factory_id] = self
 
-    def build_instance(self) -> Node | None:
-        if self.singleton and self.instances:
-            return status_bar.error(f"{style.node(self.instances[0])} can only be created once!")
+    def build_instance(self, workspace_id: str) -> Node | None:
+        if workspace_id not in self.instances:
+            self.instances[workspace_id] = []
+        
+        if self.singleton and self.instances.get(workspace_id):
+            return status_bar.error(f"{style.node(self)} can only be created once!")
 
         instanced_inputs = [copy_src(in_src) for in_src in self.inputs]
         instanced_outputs = [copy_src(out_src) for out_src in self.outputs]
@@ -423,7 +428,7 @@ class NodeFactory:
             factory=self
         )
 
-        self.instances.append(instance)
+        self.instances[workspace_id].append(instance)
         return instance
 
     def output_datatype(self) -> types.DataType | None:

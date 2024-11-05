@@ -34,7 +34,7 @@ class LimbFormat:
     VOID = b"^"
 
     @staticmethod
-    def import_state(path: str) -> list[nodes.Node]:
+    def import_state(path: str, workspace_id: str) -> list[nodes.Node]:
         saved_nodes: list[nodes.Node] = []
         unlinked_wires: list[bytes] = []
         unattached_consts: list[bytes] = []
@@ -94,7 +94,7 @@ class LimbFormat:
             if factory is None:
                 return status_bar.error(f"Parsing {style.highlight(path)} failed due to invalid FactoryID found: {factory_id} ({nodes.factories_register.keys()})")
 
-            target_node = factory.build_instance()
+            target_node = factory.build_instance(workspace_id)
             target_node.node_id = node_id
             target_node.position = measure.Position(x, y)
 

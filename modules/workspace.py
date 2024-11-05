@@ -12,6 +12,7 @@ from modules import ui
 from typing import TYPE_CHECKING, Self
 from collections.abc import Callable
 from dataclasses import dataclass
+import uuid
 import os
 
 if TYPE_CHECKING:
@@ -32,6 +33,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         self.nodes: list[nodes.Node] = []
         self.camera = measure.Camera(0, 0)
         self.selection = SelectionState()
+        self.id = uuid.uuid4().hex
         
         self.render: Callable[[None], None] | None = None
         self.viewport: "ViewportComponent | None" = None
@@ -153,7 +155,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         if not self.selection.node:
             return
         
-        new_node = self.selection.node.factory.build_instance()
+        new_node = self.selection.node.factory.build_instance(self.id)
         self.add_node(new_node)
 
     def shift_source_selection(self, direction: measure.VerticalDirection) -> None:
