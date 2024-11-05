@@ -1,10 +1,10 @@
 from modules.status_bar import status_bar
 from modules.side_bar import side_bar
+from modules import std_nodes
 from modules import workspace
 from modules import viewport
 from modules import terminal
 from modules import helpers
-from modules import nodes
 from modules import measure
 from modules import style
 from modules import ui
@@ -13,6 +13,7 @@ import traceback
 import keyboard
 import time
 import sys
+    
     
 terminal.hide_cursor()
 
@@ -25,7 +26,7 @@ if len(sys.argv) > 1:
     VIEWPORT.import_state(sys.argv[1])
     
 else:
-    default_workspace.add_node(nodes.builtin.START_FACTORY.build_instance(default_workspace.id))
+    default_workspace.add_node(std_nodes.START_FACTORY.build_instance(default_workspace.id))
 
 
 def main() -> None:    
@@ -146,9 +147,9 @@ def main() -> None:
                     VIEWPORT.scope.edit_node_mode = True
 
             if keyboard.is_pressed("esc"):
-                if VIEWPORT.scope.selection.source:
+                if VIEWPORT.scope.selection.src:
                     status_bar.standard_keys_help()
-                    VIEWPORT.scope.selection.source = None
+                    VIEWPORT.scope.selection.src = None
                     VIEWPORT.render()
                     
             if keyboard.is_pressed("ctrl+d"):

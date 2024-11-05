@@ -1,9 +1,10 @@
 from modules.status_bar import status_bar
+from modules.nodes.node import Node
+from modules.nodes import source
 from modules import helpers
 from modules import measure
 from modules import vp_ext
 from modules import format
-from modules import nodes
 from modules import types
 from modules import style
 from modules import chars
@@ -21,16 +22,16 @@ if TYPE_CHECKING:
 
 @dataclass
 class SelectionState:
-    node: nodes.Node | None = None
-    source: nodes.NodeInput | nodes.NodeOutput | None = None
-    highlighted_source: nodes.NodeInput | nodes.NodeOutput | None = None
+    node: Node | None = None
+    src: source.NodeInput | source.NodeOutput | None = None
+    highlighted_source: source.NodeInput | source.NodeOutput | None = None
 
 
 class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
     def __init__(self, name: str) -> None:
         self.name = name
         
-        self.nodes: list[nodes.Node] = []
+        self.nodes: list[Node] = []
         self.camera = measure.Camera(0, 0)
         self.selection = SelectionState()
         self.id = uuid.uuid4().hex
@@ -113,7 +114,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         
         return (indicator + style.tcolor(self.name, styles=[style.AnsiStyle.ITALIC]) + " ", total_length)
         
-    def add_node(self, node: nodes.Node) -> None:
+    def add_node(self, node: Node) -> None:
         """ 
         Add new node to the workspace. If it has no position set, 
         it will position it at the center avoiding collision with other nodes.
@@ -136,10 +137,10 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         if node is None:
             return
 
-        if self.selection.source:
-            source = self.selection.source
+        if self.selection.src:
+            source = self.selection.src
             if source.node == node:
-                self.selection.source = None
+                self.selection.src = None
                 
         self.selection.node = None
 
@@ -186,15 +187,15 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         if not self.edit_node_mode or self.selection.node is None:
             return
 
-        if self.selection.source is None:
+        if self.selection.src is None:
             status_bar.set_message(f"Select target source for {style.source(self.selection.highlighted_source)}")
 
-            self.selection.source = self.selection.highlighted_source
+            self.selection.src = self.selection.highlighted_source
             self.edit_node_mode = False
             return self.render()
 
-        nodes.connect_sources(self.selection.highlighted_source, self.selection.source)
-        self.selection.source = None
+        source.connect_sources(self.selection.highlighted_source, self.selection.src)
+        self.selection.src = None
         self.edit_node_mode = False
         
         status_bar.standard_keys_help()
@@ -208,7 +209,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         if self.selection.highlighted_source.data_type == types.FLOW:
             return status_bar.error(f"Cannnot set constant to source of type {style.datatype(types.FLOW)}")
 
-        if isinstance(self.selection.highlighted_source, nodes.NodeOutput):
+        if isinstance(self.selection.highlighted_source, source.NodeOutput):
             return status_bar.error(f"Cannot set constant value to the output source: {style.source(self.selection.highlighted_source)}")
 
         edit_help = {

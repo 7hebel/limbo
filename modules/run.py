@@ -1,7 +1,7 @@
+from modules.nodes import node
 from modules import terminal
 from modules import helpers
 from modules import style
-from modules import nodes
 from modules import ui
 
 from dataclasses import dataclass
@@ -16,7 +16,7 @@ class RuntimeSourcePtr:
 
 
 class RuntimeNode:
-    def __init__(self, node_model: nodes.Node) -> None:
+    def __init__(self, node_model: node.Node) -> None:
         self.node_model = node_model
         self.name = node_model.title
         self.handler = node_model.handler
@@ -90,13 +90,13 @@ class NodeRunner:
     MAX_RUN_COUNT = 100
     run_count = 0
 
-    def __init__(self, start_node: nodes.Node, raw_nodes: list[nodes.Node]) -> None:
+    def __init__(self, start_node: node.Node, raw_nodes: list[node.Node]) -> None:
         self.runtime_nodes: dict[int, RuntimeNode] = {}
         self.start_time = time.time_ns()
         self.initialize_nodes(start_node, raw_nodes)
         helpers.MemoryJar.new_jar()
 
-    def initialize_nodes(self, start_node: nodes.Node, raw_nodes: list[nodes.Node]) -> None:
+    def initialize_nodes(self, start_node: node.Node, raw_nodes: list[node.Node]) -> None:
         for raw_node in raw_nodes:
             rt_node = RuntimeNode(raw_node)
             self.runtime_nodes[raw_node.node_id] = rt_node

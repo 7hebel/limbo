@@ -1,6 +1,9 @@
 from modules.status_bar import status_bar
+from modules.nodes import factory
+from modules.nodes import source
+from modules.nodes import node
+
 from modules import measure
-from modules import nodes
 from modules import style
 
 
@@ -34,12 +37,12 @@ class LimbFormat:
     VOID = b"^"
 
     @staticmethod
-    def import_state(path: str, workspace_id: str) -> list[nodes.Node]:
-        saved_nodes: list[nodes.Node] = []
+    def import_state(path: str, workspace_id: str) -> list[node.Node]:
+        saved_nodes: list[node.Node] = []
         unlinked_wires: list[bytes] = []
         unattached_consts: list[bytes] = []
         
-        def read_node(node_data: bytes) -> nodes.Node | None:
+        def read_node(node_data: bytes) -> node.Node | None:
             node_data = node_data[len(LimbFormat.NODE_HEADER):]
 
             try:
@@ -90,17 +93,17 @@ class LimbFormat:
             if not is_std:
                 pass
 
-            factory: nodes.NodeFactory = nodes.factories_register.get(factory_id)
-            if factory is None:
-                return status_bar.error(f"Parsing {style.highlight(path)} failed due to invalid FactoryID found: {factory_id} ({nodes.factories_register.keys()})")
+            base_factory: node.NodeFactory = factory.factories_register.get(factory_id)
+            if base_factory is None:
+                return status_bar.error(f"Parsing {style.highlight(path)} failed due to invalid FactoryID found: {factory_id} ({factory.factories_register.keys()})")
 
-            target_node = factory.build_instance(workspace_id)
+            target_node = base_factory.build_instance(workspace_id)
             target_node.node_id = node_id
             target_node.position = measure.Position(x, y)
 
             return target_node
 
-        def get_node(node_id: str) -> nodes.Node | None:
+        def get_node(node_id: str) -> node.Node | None:
             for node in saved_nodes:
                 if node.node_id == node_id:
                     return node
@@ -136,7 +139,7 @@ class LimbFormat:
             if in_src is None:
                 return status_bar.error(f"Parsing {style.highlight(path)} failed due to missing input source: {in_nodeid}/{in_src}")
                 
-            nodes.connect_sources(out_src, in_src)
+            source.connect_sources(out_src, in_src)
             return True
 
         def set_constant(constant_data: bytes) -> None:
@@ -191,10 +194,10 @@ class LimbFormat:
 
 
     @staticmethod
-    def export(nodes_state: list[nodes.Node], path: str) -> None:
+    def export(nodes_state: list[node.Node], path: str) -> None:
         """ Save nodes state into file at given path. File should exist. """
 
-        def parse_output_wire(output: nodes.NodeOutput) -> bytes:
+        def parse_output_wire(output: source.NodeOutput) -> bytes:
             """ Parse wire connection between output and input. Returns blank bytes if target is None. """
             input_ = output.target
             if input_ is None:
@@ -210,7 +213,7 @@ class LimbFormat:
 
             return content
         
-        def parse_const_value(input_src: nodes.NodeInput) -> bytes:
+        def parse_const_value(input_src: source.NodeInput) -> bytes:
             if input_src is None or input_src.constant_value is None:
                 return b""
             
@@ -226,7 +229,7 @@ class LimbFormat:
             
             return content
 
-        def parse_node(node: nodes.Node) -> bytes:
+        def parse_node(node: source.Node) -> bytes:
             """
             Convert Node into savable format.
 
@@ -277,5 +280,3 @@ class LimbFormat:
             file.write(content)
 
         status_bar.set_message(f"Saved into: {style.highlight(path)}")
-
-

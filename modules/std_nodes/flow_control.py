@@ -1,4 +1,7 @@
-from modules.nodes import *
+from modules.nodes.source import NodeInput, NodeOutput
+from modules.nodes.collection import NodesCollections
+from modules.nodes.factory import NodeFactory
+from modules.nodes.node import FlowControl
 from modules import types
 
 
@@ -15,11 +18,11 @@ START_FACTORY = NodeFactory(
 
 
 # Exit.
-def exit_flow(ins: dict[str, int]) -> dict[str, Any]:
+def exit_flow(ins: dict[str, int]) -> None:
     code = ins.get("Code") or -1
     raise EOFError(code)
 
-EXIT_FACTORY = NodeFactory(
+NodeFactory(
     title="Exit",
     collection=NodesCollections.FLOW_CONTROL,
     flow=FlowControl(False),
@@ -33,7 +36,7 @@ def if_else_flow(ins: dict[str, bool]) -> str:
     value = ins.get("Value")
     return "if" if value else "else"
     
-IF_ELSE_FACTORY = NodeFactory(
+NodeFactory(
     title="If/Else",
     collection=NodesCollections.FLOW_CONTROL,
     flow=FlowControl(False),
@@ -43,7 +46,7 @@ IF_ELSE_FACTORY = NodeFactory(
 )
 
 # Restart.
-def restart(ins: dict) -> None:
+def restart(*_) -> None:
     raise EOFError(-100)
 
 NodeFactory(

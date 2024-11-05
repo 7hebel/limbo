@@ -1,4 +1,7 @@
-from modules.nodes import *
+from modules.nodes.source import NodeInput, NodeOutput
+from modules.nodes.collection import NodesCollections
+from modules.nodes.factory import NodeFactory
+from modules.nodes.node import FlowControl
 from modules import types
 
 

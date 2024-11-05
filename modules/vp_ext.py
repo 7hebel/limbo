@@ -1,4 +1,5 @@
-from modules import nodes as nodes_mod
+from modules.nodes import source
+from modules.nodes import node
 from modules import helpers
 from modules import measure
 
@@ -11,7 +12,7 @@ if typing.TYPE_CHECKING:
 
 class TargetViewport(abc.ABC):
     selection: "workspace.SelectionState"
-    nodes: list[nodes_mod.Node]
+    nodes: list[node.Node]
     edit_node_mode: bool
     camera: measure.Camera
     _nodes_state_cache: dict[str, str]
@@ -20,7 +21,7 @@ class TargetViewport(abc.ABC):
     def render(self) -> None: ...
 
 
-def node_safe_rect(node: nodes_mod.Node) -> measure.Rect:
+def node_safe_rect(node: node.Node) -> measure.Rect:
     if node.position is None:
         raise ValueError("cannot calc safe rect for node with no position")
 
@@ -176,7 +177,7 @@ class MovableNodes(TargetViewport):
 
 
 class StateBasedNodeCache(TargetViewport):
-    def eval_node_state(self, node: nodes_mod.Node) -> str:
+    def eval_node_state(self, node: node.Node) -> str:
         """ Used for caching drawable nodes. """
         state = "0" if not node == self.scope.selection.node else "1"
         state += "0" if not self.scope.edit_node_mode else "1"
@@ -190,22 +191,22 @@ class StateBasedNodeCache(TargetViewport):
             elif self.selection.highlighted_source == node.flow.output_src:
                 state += "O"
 
-        for index, source in enumerate(helpers.iter_alternately(node.inputs, node.outputs)):
-            if isinstance(source, nodes_mod.NodeInput):
-                if source.source is not None:
+        for index, src in enumerate(helpers.iter_alternately(node.inputs, node.outputs)):
+            if isinstance(src, source.NodeInput):
+                if src.source is not None:
                     state += f"c{index}"
-            elif source.target is not None:
+            elif src.target is not None:
                 state += f"c{index}"
             
-            if self.edit_node_mode and self.selection.highlighted_source == source:
+            if self.edit_node_mode and self.selection.highlighted_source == src:
                 state += f"h{index}"
 
-            if source == self.selection.source:
+            if src == self.selection.src:
                 state += f"s{index}"
 
         return state
 
-    def has_node_state_changed(self, node: nodes_mod.Node) -> bool:
+    def has_node_state_changed(self, node: node.Node) -> bool:
         state = self.eval_node_state(node)
         
         if node.node_id not in self._nodes_state_cache:

@@ -1,8 +1,11 @@
 from modules.status_bar import status_bar
 from modules.side_bar import side_bar
+from modules.nodes.node import Node
 from modules import wire_builder
+from modules.nodes import source
 from modules import user_input
 from modules import workspace
+from modules import std_nodes
 from modules import terminal
 from modules import measure
 from modules import helpers
@@ -10,7 +13,6 @@ from modules import string
 from modules import format
 from modules import chars
 from modules import style
-from modules import nodes
 from modules import types
 from modules import run
 from modules import ui
@@ -56,7 +58,7 @@ class ViewportComponent(ui.TextUIComponent):
     def get_border_connections(self) -> style.BorderConnection:
         return style.BorderConnection(s=status_bar.get_rect() is not None)
 
-    def drawable_node(self, node: "nodes.Node") -> tuple[string.ColoredStringObject, measure.Rect]:
+    def drawable_node(self, node: Node) -> tuple[string.ColoredStringObject, measure.Rect]:
         """ Returns drawable representation of node, and it's rect. """
         w, h = node.calc_output_size()
         rect = measure.Rect(node.position, w, h)
@@ -98,11 +100,11 @@ class ViewportComponent(ui.TextUIComponent):
         builder.feed_string(chars.ROUNDED_LINE.vr + (chars.ROUNDED_LINE.hz * (w - 2)) + chars.ROUNDED_LINE.vl, outline_color)
         builder.break_line()
 
-        for source in helpers.iter_alternately(node.inputs, node.outputs):
-            source: "nodes.NodeInput | nodes.NodeOutput"
+        for src in helpers.iter_alternately(node.inputs, node.outputs):
+            src: source.NodeInput | source.NodeOutput
 
-            is_selected_node = self.scope.edit_node_mode and self.scope.selection.highlighted_source == source
-            is_selected_source = source == self.scope.selection.source
+            is_selected_node = self.scope.edit_node_mode and self.scope.selection.highlighted_source == src
+            is_selected_source = src == self.scope.selection.src
 
             styles = [style.AnsiStyle.ITALIC]
             if is_selected_node:
@@ -110,24 +112,24 @@ class ViewportComponent(ui.TextUIComponent):
             if is_selected_source:
                 styles.append(style.AnsiStyle.UNDERLINE)
 
-            if source in node.inputs:
-                builder.feed_char(source.icon, source.data_type.color)
+            if src in node.inputs:
+                builder.feed_char(src.icon, src.data_type.color)
 
-                color = None if source.required else style.AnsiFGColor.LIGHTBLACK
+                color = None if src.required else style.AnsiFGColor.LIGHTBLACK
 
                 builder.feed_char(" ")
-                builder.feed_string(source.name, color, styles)
-                builder.feed_string("".ljust(w - len(source.name) - 3))
+                builder.feed_string(src.name, color, styles)
+                builder.feed_string("".ljust(w - len(src.name) - 3))
 
                 builder.feed_char(chars.ROUNDED_LINE.vt, outline_color)
                 builder.break_line()
 
-            if source in node.outputs:
+            if src in node.outputs:
                 builder.feed_char(chars.ROUNDED_LINE.vt, outline_color)
-                builder.feed_string("".rjust(w - 3 - len(source.name)))
-                builder.feed_string(f"{source.name}", styles=styles)
+                builder.feed_string("".rjust(w - 3 - len(src.name)))
+                builder.feed_string(f"{src.name}", styles=styles)
                 builder.feed_char(" ")
-                builder.feed_char(source.icon, source.data_type.color)
+                builder.feed_char(src.icon, src.data_type.color)
                 builder.break_line()
 
         builder.feed_string(chars.ROUNDED_LINE.sw + (chars.ROUNDED_LINE.hz * (w - 2)) + chars.ROUNDED_LINE.se, outline_color)
@@ -227,8 +229,8 @@ class ViewportComponent(ui.TextUIComponent):
                     terminal.write_at(char, c_x, c_y)
 
     def run_program(self) -> None:
-        if not nodes.builtin.START_FACTORY.instances[self.scope.id]:
-            return status_bar.error(f"Missing {style.node(nodes.builtin.START_FACTORY)} node!")
+        if not std_nodes.START_FACTORY.instances[self.scope.id]:
+            return status_bar.error(f"Missing {style.node(std_nodes.START_FACTORY)} node!")
 
         for node in self.scope.nodes:
             for input_source in node.inputs:
@@ -239,7 +241,7 @@ class ViewportComponent(ui.TextUIComponent):
                     return status_bar.error(f"Undefined required value: {style.source(input_source)}")
 
         style.clear_screen()
-        start_node = nodes.builtin.START_FACTORY.instances[self.scope.id][0]
+        start_node = std_nodes.START_FACTORY.instances[self.scope.id][0]
         run.NodeRunner(start_node, self.scope.nodes).run()
 
     def import_state(self, path: str | None = None) -> None:
@@ -258,7 +260,6 @@ class ViewportComponent(ui.TextUIComponent):
         
         old_scope = self.scope
         self.scope = workspace.Workspace("").initialize(self)
-        self.scope.associate_file(path)
         side_bar.set_workspace_id(self.scope.id)
             
         imported_nodes = format.LimbFormat.import_state(path, self.scope.id)
@@ -271,5 +272,8 @@ class ViewportComponent(ui.TextUIComponent):
             self.scope.add_node(node)
 
         self.render = renderer
-        self.scope.render = renderer
         self.render()
+        
+        self.scope.associate_file(path)
+        self.scope.render = renderer
+        

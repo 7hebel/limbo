@@ -8,7 +8,7 @@ store previous RECT in cache with state and clean this rect, not new one
 mutliple workspaces?
 
 
-to .exe???
+to .exe??? (gpt)
 
 NODES:
 files nodes category
