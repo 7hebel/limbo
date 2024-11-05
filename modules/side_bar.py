@@ -268,8 +268,8 @@ class SideBarComponent(ui.TextUIComponent):
                 for i, factory in enumerate(collection.factories):
                     line_index += 1
                     
-                    node_type_char = chars.FUNCTION_NODE if factory.is_function_node() else chars.FLOW_NODE if factory.is_flow_node() else ""
-                    node_type_indicator = " " + style.tcolor(node_type_char, factory.outputs[0].data_type.color, styles=[style.AnsiStyle.DIM]) if node_type_char else ""
+                    node_type_char = factory.get_char_indicator()
+                    node_type_indicator = " " + style.tcolor(node_type_char, factory.output_datatype().color, styles=[style.AnsiStyle.DIM]) if node_type_char else ""
 
                     styles = [style.AnsiStyle.DIM] if not self.is_focused else [style.AnsiStyle.ITALIC, style.AnsiStyle.INVERT] if factory == self.__focused_object  else []
                     tree_char = chars.ROUNDED_LINE.vr if (i + 1) != len(collection.factories) else chars.ROUNDED_LINE.sw

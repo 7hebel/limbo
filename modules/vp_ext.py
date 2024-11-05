@@ -14,6 +14,7 @@ class TargetViewport(abc.ABC):
     nodes: list[nodes_mod.Node]
     edit_node_mode: bool
     camera: measure.Camera
+    _nodes_state_cache: dict[str, str]
 
     @abc.abstractmethod
     def render(self) -> None: ...
@@ -174,46 +175,46 @@ class MovableNodes(TargetViewport):
         self.render()
 
 
-# class StateBasedNodeCache(TargetViewport):
-#     def eval_node_state(self, node: nodes_mod.Node) -> str:
-#         """ Used for caching drawable nodes. """
-#         state = "0" if not node == self.selection.node else "1"
-#         state += "0" if not self.edit_node_mode else "1"
-#         state += f"{node.position.x}.{node.position.y}"
-#         state += f"{self.camera.x}.{self.camera.y}"
+class StateBasedNodeCache(TargetViewport):
+    def eval_node_state(self, node: nodes_mod.Node) -> str:
+        """ Used for caching drawable nodes. """
+        state = "0" if not node == self.scope.selection.node else "1"
+        state += "0" if not self.scope.edit_node_mode else "1"
+        state += f"{node.position.x}.{node.position.y}"
+        state += f"{self.camera.x}.{self.camera.y}"
 
-#         if self.edit_node_mode and node == self.selection.node:
-#             if self.selection.highlighted_source == node.flow.input_src:
-#                 state += "I"
+        if self.edit_node_mode and node == self.selection.node:
+            if self.selection.highlighted_source == node.flow.input_src:
+                state += "I"
 
-#             elif self.selection.highlighted_source == node.flow.output_src:
-#                 state += "O"
+            elif self.selection.highlighted_source == node.flow.output_src:
+                state += "O"
 
-#         for index, source in enumerate(helpers.iter_alternately(node.inputs, node.outputs)):
-#             if isinstance(source, nodes_mod.NodeInput):
-#                 if source.source is not None:
-#                     state += f"c{index}"
-#             elif source.target is not None:
-#                     state += f"c{index}"
+        for index, source in enumerate(helpers.iter_alternately(node.inputs, node.outputs)):
+            if isinstance(source, nodes_mod.NodeInput):
+                if source.source is not None:
+                    state += f"c{index}"
+            elif source.target is not None:
+                state += f"c{index}"
             
-#             if self.edit_node_mode and self.selection.highlighted_source == source:
-#                 state += f"h{index}"
+            if self.edit_node_mode and self.selection.highlighted_source == source:
+                state += f"h{index}"
 
-#             if source == self.selection.source:
-#                 state += f"s{index}"
+            if source == self.selection.source:
+                state += f"s{index}"
 
-#         return state
+        return state
 
-#     def has_node_state_changed(self, node: nodes_mod.Node) -> bool:
-#         state = self.eval_node_state(node)
+    def has_node_state_changed(self, node: nodes_mod.Node) -> bool:
+        state = self.eval_node_state(node)
         
-#         if node.node_id not in self._nodes_state_cache:
-#             self._nodes_state_cache[node.node_id] = (state, node.rect)
-#             return True
+        if node.node_id not in self._nodes_state_cache:
+            self._nodes_state_cache[node.node_id] = (state, node.rect)
+            return True
         
-#         if self._nodes_state_cache.get(node.node_id)[0] != state:
-#             self._nodes_state_cache[node.node_id] = (state, node.rect)
-#             return True
+        if self._nodes_state_cache.get(node.node_id)[0] != state:
+            self._nodes_state_cache[node.node_id] = (state, node.rect)
+            return True
         
-#         return False
+        return False
         

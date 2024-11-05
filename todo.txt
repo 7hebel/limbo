@@ -17,6 +17,6 @@ better sidebar rendering
 NODES:
 files nodes category
 key-value storage nodes (save, get etc.) AS VARIABLES
-back to start (restart)
 custom nodes
 clean screen
+wait for enter

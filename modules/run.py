@@ -1,4 +1,5 @@
 from modules import terminal
+from modules import helpers
 from modules import style
 from modules import nodes
 from modules import ui
@@ -90,6 +91,7 @@ class NodeRunner:
         self.runtime_nodes: dict[int, RuntimeNode] = {}
         self.start_time = time.time_ns()
         self.initialize_nodes(start_node, raw_nodes)
+        helpers.MemoryJar.new_jar()
 
     def initialize_nodes(self, start_node: nodes.Node, raw_nodes: list[nodes.Node]) -> None:
         for raw_node in raw_nodes:
@@ -102,8 +104,6 @@ class NodeRunner:
         self.entry_node = self.runtime_nodes[start_node.node_id]
 
     def run(self):
-        style.clear_screen()
-
         node = self.entry_node
 
         while node:
@@ -111,6 +111,8 @@ class NodeRunner:
                 node.execute()
 
             except EOFError as exit_code:
+                if str(exit_code) == "-100":
+                    return self.run()
                 return self.finish(exit_code)
 
             except RuntimeError as error:

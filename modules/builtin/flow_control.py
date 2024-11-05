@@ -40,4 +40,18 @@ IF_ELSE_FACTORY = NodeFactory(
     inputs=[NodeInput("Value", types.BOOLEAN)],
     outputs=[NodeOutput("if", types.FLOW), NodeOutput("else", types.FLOW)],
     handler=if_else_flow
-) 
+)
+
+# Restart.
+def restart(ins: dict) -> None:
+    raise EOFError(-100)
+
+NodeFactory(
+    title="Restart",
+    collection=NodesCollections.FLOW_CONTROL,
+    flow=FlowControl(False, enable_input=True),
+    inputs=[],
+    outputs=[],
+    handler=restart,
+)
+

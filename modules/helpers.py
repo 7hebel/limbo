@@ -1,4 +1,28 @@
-from typing import Generator
+from typing import Generator, Any
+
+
+class MemoryJar:
+    current: "MemoryJar | None" = None
+
+    @staticmethod
+    def get_current() -> "MemoryJar":
+        if MemoryJar.current is None:
+            MemoryJar.current = MemoryJar()
+        return MemoryJar.current
+
+    @staticmethod
+    def new_jar() -> None:
+        MemoryJar.current = MemoryJar()
+
+    def __init__(self) -> None:
+        self.data: dict[str, Any] = {}
+
+    def set_value(self, key: str, value: str) -> None:
+        self.data[key] = value
+
+    def get_value(self, key: str, default: Any = None) -> Any:
+        return self.data.get(key, default)
+
 
 
 def iter_alternately(a: list, b: list) -> Generator:

@@ -95,6 +95,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         
         format.LimbFormat.export(self.nodes, path)
         self.__is_saved = True
+        ui.render_all()
         
     def renderable_title(self) -> tuple[str, int]:
         """ Return styled version of workspace's name including singal chars and it's real length. """
@@ -125,7 +126,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
             self.move_node_right()
 
         self.__is_saved = False
-        self.render()
+        ui.render_all()
         
     def remove_node(self) -> None:
         """ Remove selected node. Disconnect all wires. """
@@ -145,7 +146,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
 
         self.selection.node = self.nodes[0] if self.nodes else None
         self.__is_saved = False
-        self.render()
+        ui.render_all()
         return status_bar.set_message(f"Removed {style.node(node)}")
 
     def duplicate_node(self) -> None:
@@ -177,7 +178,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
 
         self.selection.highlighted_source.disconnect()
         self.__is_saved = False
-        self.render()
+        ui.render_all()
         
     def choose_source(self) -> None:
         if not self.edit_node_mode or self.selection.node is None:
@@ -195,8 +196,9 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         self.edit_node_mode = False
         
         status_bar.standard_keys_help()
-        self.render()
-        
+        self.__is_saved = False
+        ui.render_all()
+
     def edit_constant(self) -> None:
         if not self.selection.highlighted_source:
             return

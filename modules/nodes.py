@@ -14,6 +14,8 @@ import uuid
 
 
 def calc_node_height(node: "Node") -> int:
+    if not node.has_data_source():
+        return 3  # Only borders, flow controls and title.
     return len(node.inputs) + len(node.outputs) + 4  # Borders, title, separator, sources
 
 
@@ -96,7 +98,6 @@ class NodeInput:
     @property
     def icon(self) -> str:
         """ Returns displayable icon in form of a ASCII char based on state. """
-
         if self.constant_value is not None:
             return chars.CONSTANT_VALUE
 
@@ -330,6 +331,12 @@ class Node:
             if input_src.name == name:
                 return input_src
 
+    def has_data_source(self) -> bool:
+        for src in self.inputs + self.outputs:
+            if src.data_type != types.FLOW:
+                return True
+        return False
+
 
 def connect_sources(s1: NodeInput | NodeOutput, s2: NodeInput | NodeOutput) -> None:
     """ Connect two node data sources. Perfroms basic validation. """
@@ -369,6 +376,7 @@ class NodesCollections(Enum):
     FLOW_CONTROL = Collection("Flow Control", style.AnsiFGColor.RED)
     LOGICAL = Collection("Logical", style.AnsiFGColor.BLUE)
     CASTING = Collection("Cast", style.AnsiFGColor.CYAN)
+    MEMORY = Collection("Memory", style.AnsiFGColor.WHITE)
     MATH = Collection("Maths", style.AnsiFGColor.MAGENTA)
     STRINGS = Collection("Strings", style.AnsiFGColor.YELLOW)
     INTERACTION = Collection("Interaction", style.AnsiFGColor.GREEN)
@@ -418,14 +426,28 @@ class NodeFactory:
         self.instances.append(instance)
         return instance
 
+    def output_datatype(self) -> types.DataType | None:
+        if not self.outputs:
+            if self.flow.enable_output:
+                return types.FLOW
+            return None
+
+        return self.outputs[0].data_type
+
     def is_function_node(self) -> bool:
-        """ Function node is a node with disabled output flow source and with at least one input and output. """
-        return not self.flow.enable_output and self.inputs and self.outputs and not self.is_flow_node()
+        """ Function node is a node with at least one input and output. """
+        return self.outputs or self.flow.enable_output
 
-    def is_flow_node(self) -> bool:
-        """ Flow node is a node that has at least one output of type FLOW (can't have other types). """
-        return self.outputs and self.outputs[0].data_type == types.FLOW
+    def get_char_indicator(self) -> str:
+        dt = self.output_datatype()
+        
+        if dt is None:
+            return ""
+        
+        if dt == types.FLOW:
+            return chars.FLOW_NODE
 
+        return chars.FUNCTION_NODE
 
 """ Initialize all NodeFactories, feed NodesCollection, set sidebar collection. """
 from modules import builtin

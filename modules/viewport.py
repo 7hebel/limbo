@@ -8,6 +8,7 @@ from modules import measure
 from modules import helpers
 from modules import string
 from modules import format
+from modules import vp_ext
 from modules import chars
 from modules import style
 from modules import nodes
@@ -90,6 +91,10 @@ class ViewportComponent(ui.TextUIComponent):
             builder.feed_char(flow_out_char, outline_color)
 
         builder.break_line()
+
+        if not node.has_data_source():
+            builder.feed_string(chars.ROUNDED_LINE.sw + (chars.ROUNDED_LINE.hz * (w - 2)) + chars.ROUNDED_LINE.se, outline_color)
+            return (builder, rect)
 
         builder.feed_string(chars.ROUNDED_LINE.vr + (chars.ROUNDED_LINE.hz * (w - 2)) + chars.ROUNDED_LINE.vl, outline_color)
         builder.break_line()
@@ -234,10 +239,11 @@ class ViewportComponent(ui.TextUIComponent):
                     
                     return status_bar.error(f"Undefined required value: {style.source(input_source)}")
 
+        style.clear_screen()
         start_node = nodes.builtin.START_FACTORY.instances[0]
         run.NodeRunner(start_node, self.scope.nodes).run()
 
-    def import_state(self, path: str | None) -> None:
+    def import_state(self, path: str | None = None) -> None:
         if path is None:
             path = self.prompt("Import path", "")
         
