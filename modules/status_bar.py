@@ -86,6 +86,7 @@ class StatusBarComponent(ui.TextUIComponent):
             "ctrl+i": "import",
             "F1": "run",
             "F2": "compile",
+            "F12": "debug",
         }
         
         self.keys_help("", STD_KEYS)

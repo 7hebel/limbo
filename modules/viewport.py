@@ -285,13 +285,13 @@ class ViewportComponent(ui.TextUIComponent):
                 
         return True
         
-    def run_program(self) -> None:
+    def run_program(self, debug: bool = False) -> None:
         if not self.prerun_check():
             return
 
         terminal.clear_screen()
         start_node = std_nodes.START_FACTORY.instances[self.scope.id][0]
-        interpreter.NodeRunner(start_node, self.scope.nodes).run()
+        interpreter.NodeRunner(start_node, self.scope.nodes, debug).run()
 
     def compile_program(self) -> None:
         if not self.prerun_check():

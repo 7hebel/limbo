@@ -13,14 +13,20 @@ class NodeRunner:
     MAX_RUN_COUNT = 100
     run_count = 0
 
-    def __init__(self, start_node: node.Node, raw_nodes: list[node.Node]) -> None:
+    def __init__(self, start_node: node.Node, raw_nodes: list[node.Node], debug_mode: bool = False) -> None:
         self.start_node = start_node
         self.raw_nodes = raw_nodes
+        self.debug_mode = debug_mode
         
         self.runtime_nodes: dict[int, runtime.RuntimeNode] = {}
         self.start_time = time.time_ns()
         self.initialize_nodes(start_node, raw_nodes)
         helpers.MemoryJar.new_jar()
+        self.debug_log("Initialized new memory jar.")
+
+    def debug_log(self, content: str) -> None:
+        if self.debug_mode:
+            print(style.tcolor("  (DBG) ", style.AnsiFGColor.CYAN) + content)
 
     def initialize_nodes(self, start_node: node.Node, raw_nodes: list[node.Node]) -> None:
         for raw_node in raw_nodes:
@@ -31,13 +37,18 @@ class NodeRunner:
             rt_node.initialize(self.runtime_nodes)
 
         self.entry_node = self.runtime_nodes[start_node.node_id]
+        self.debug_log(f"Initialized {len(self.runtime_nodes)} nodes.")
 
     def reset_values(self) -> None:
+        self.debug_log(f"Reset state for: {len(self.runtime_nodes)} nodes.")
+
         for rt_node in self.runtime_nodes.values():
             rt_node.output_values = None
-
+            
     def run(self):
         NodeRunner.run_count += 1
+        self.debug_log(f"Starting program for the: {style.highlight(f'{NodeRunner.run_count} time.')}")
+        
         if NodeRunner.run_count > NodeRunner.MAX_RUN_COUNT:
             self.error_dump(None, f"Program has been restarted over {NodeRunner.MAX_RUN_COUNT} times. Automatically terminated infinite loop.")
             return self.finish(ExitCode.INF_RECURSION)
@@ -47,6 +58,7 @@ class NodeRunner:
         while node:
             try:
                 node.execute()
+                self.debug_log(f"Executed RT-node: <{style.highlight(node.name)}> with result: {style.highlight(str(node.output_values) or '(no output)')}")
 
             except EOFError as exit_code:
                 exit_code = int(str(exit_code))
@@ -54,10 +66,12 @@ class NodeRunner:
                 if exit_code == ExitCode.RESTART:
                     helpers.MemoryJar.new_jar()
                     self.reset_values()
+                    self.debug_log("Restarting with new memory jar...")
                     return self.run()
                 
                 if exit_code == ExitCode.RESTART_SAVE_MEMORY:
                     self.reset_values()
+                    self.debug_log("Restarting but keeping the memory...")
                     return self.run()
                 
                 return self.finish(exit_code)

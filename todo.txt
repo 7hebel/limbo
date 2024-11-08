@@ -1,15 +1,9 @@
-node.outputs is always only one or no values. dont keep it as a list!
-
 render node only if haschanged
 store previous RECT in cache with state and clean this rect, not new one
 
 mutliple workspaces?
 
-debug mode : save calls with args and returns into file. (visualize each call?)
-
 (MAYBE) more than one flow_input source (loops?) 
-
-test on linux
 
 NODES:
 files nodes category

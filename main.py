@@ -167,6 +167,10 @@ def main() -> None:
             # Compile program.
             if keyboard.is_pressed("f2"):
                 VIEWPORT.compile_program()
+                
+            # Debug program.
+            if keyboard.is_pressed("f12"):
+                VIEWPORT.run_program(debug=True)
 
         elif VIEWPORT.scope.edit_node_mode:
             
