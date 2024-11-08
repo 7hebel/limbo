@@ -1,2 +1,5 @@
 nuitka
+colorama
+keyboard
+PyGetWindow
 tcolorpy
