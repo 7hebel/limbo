@@ -82,6 +82,8 @@ class StatusBarComponent(ui.TextUIComponent):
             f"alt+{chars.ALL_ARROWS[0]}": "move node",
             "enter": "edit node",
             "tab": "nodes",
+            "ctrl+e": "export",
+            "ctrl+i": "import",
             "F1": "run",
             "F2": "compile",
         }

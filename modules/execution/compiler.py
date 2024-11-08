@@ -108,14 +108,14 @@ class Compiler:
 
         exe_path = self.compile_to_exe()
         total_time = (time.time_ns() - start_time) / 1e9
-        # self.cleanup()
+        self.cleanup()
 
         print(f"\n\nCompiled {style.highlight(name)} to: {style.highlight(exe_path)} in {style.highlight(f'{total_time}s')}\n\n")
         print(f"Press {style.key('enter')} to continue...")
         terminal.wait_for_enter()
 
     def fn_name(self, node: Node) -> str:
-        return f'f_{node.factory.title.replace(" ", "_").replace("-", "_")}'
+        return f'f_{node.factory.title.replace(" ", "_").replace("-", "_").replace("/", "_")}'
 
     def define_functions(self) -> str:
         """ Define mapped functions with code from nodes' handlers. Includes FN_REG. """
@@ -190,6 +190,7 @@ class Compiler:
         }
         """
         print("\nBuild instances register:")
+
         register = {}
 
         for node in self.all_nodes:
