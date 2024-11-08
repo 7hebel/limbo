@@ -9,6 +9,7 @@ debug mode : save calls with args and returns into file. (visualize each call?)
 
 (MAYBE) more than one flow_input source (loops?) 
 
+test on linux
 
 NODES:
 files nodes category

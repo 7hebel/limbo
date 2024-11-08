@@ -1,16 +1,23 @@
-from modules import style
 from modules import ui
 
-import pygetwindow
 import threading
 import keyboard
 import time
 import sys
 import os
 
+try:
+    import pygetwindow
+    CONSOLE_WINDOW = pygetwindow.getActiveWindow()
+    
+except NotImplementedError:
+    CONSOLE_WINDOW = None
 
-CONSOLE_WINDOW = pygetwindow.getActiveWindow()
 MIN_W, MIN_H = 124, 33
+
+
+def clear_screen():
+    os.system("cls || clear")
 
 
 def set_cursor_pos(x: int, y: int) -> None:
@@ -107,11 +114,13 @@ def wait_for_enter() -> None:
 
 
 def is_active_window() -> bool:
+    if CONSOLE_WINDOW is None:
+        return True
     return pygetwindow.getActiveWindow() == CONSOLE_WINDOW
 
 
 def on_too_small_display() -> None:
-    style.clear_screen()
+    clear_screen()
     message1 = "The console is too small to correctly display all UI components."
     message2 = "Please resize the terminal in order to use program."
     print("\n" * ((get_h() // 2) - 6))

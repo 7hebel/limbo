@@ -289,7 +289,7 @@ class ViewportComponent(ui.TextUIComponent):
         if not self.prerun_check():
             return
 
-        style.clear_screen()
+        terminal.clear_screen()
         start_node = std_nodes.START_FACTORY.instances[self.scope.id][0]
         interpreter.NodeRunner(start_node, self.scope.nodes).run()
 

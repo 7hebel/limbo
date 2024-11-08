@@ -5,7 +5,6 @@ from modules import chars
 from tcolorpy import tcolor, AnsiFGColor, AnsiBGColor, AnsiStyle
 from colorama import init, Fore, Back, Style
 from dataclasses import dataclass
-import os
 import re
 
 init()
@@ -15,13 +14,11 @@ DIM = "\033[2m"
 ITALIC = "\033[3m"
 UNDERLINE = "\033[4m"
 FLOW_CONTROL_COLOR = AnsiFGColor.RED
-
-
-def clear_screen():
-    os.system("cls || clear")
     
     
 def real_length(styled_text: str) -> int:
+    """ Returns length of ANSI-escaped string. """
+    
     ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
     plain_text = ansi_escape.sub('', styled_text)
     return len(plain_text)

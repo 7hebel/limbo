@@ -206,13 +206,13 @@ if __name__ == "__main__":
         main()
 
     except KeyboardInterrupt:
-        style.clear_screen()
+        terminal.clear_screen()
         helpers.flush_system_keyboard_buffer_win()
         terminal.show_cursor()
         exit(0)
         
     except Exception as internal_error:
-        style.clear_screen()
+        terminal.clear_screen()
         helpers.flush_system_keyboard_buffer_win()
         terminal.show_cursor()
         

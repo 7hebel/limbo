@@ -45,7 +45,7 @@ NodeFactory(
     flow=FlowControl(True),
     inputs=[],
     outputs=[],
-    handler=lambda *_: style.clear_screen(),
+    handler=lambda *_: terminal.clear_screen(),
 )
 
 

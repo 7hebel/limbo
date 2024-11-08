@@ -10,7 +10,7 @@ initalized_components: list["TextUIComponent"] = []
 
 def render_all(skip_component: "TextUIComponent | None" = None) -> None:
     """ Render all initialized UI components and their borders. """
-    style.clear_screen()
+    terminal.clear_screen()
 
     for component in initalized_components:
         if component == skip_component:

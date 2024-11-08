@@ -83,7 +83,7 @@ class Compiler:
         self.all_nodes = all_nodes
 
         start_time = time.time_ns()
-        style.clear_screen()
+        terminal.clear_screen()
         print(f"Started compilation process for: {style.highlight(name + ".exe")}")
 
         self.__compilation_dir_path = "./__compilation/"
