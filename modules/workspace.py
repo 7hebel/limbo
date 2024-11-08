@@ -41,7 +41,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
 
         self.__edit_node_mode: bool = False
         self.__associated_file: str | None = None
-        self.__is_saved: bool = False
+        self._is_saved: bool = False
       
     def initialize(self, viewport: "ViewportComponent") -> Self:
         self.viewport = viewport
@@ -81,7 +81,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
     def associate_file(self, path: str) -> None:
         """ Link file with this workspace. """
         self.__associated_file = path
-        self.__is_saved = True
+        self._is_saved = True
         self.name = os.path.basename(path)
         ui.render_all()
         
@@ -97,7 +97,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
             self.associate_file(path)
         
         format.LimbFormat.export(self.nodes, path)
-        self.__is_saved = True
+        self._is_saved = True
         ui.render_all()
         
     def renderable_title(self) -> tuple[str, int]:
@@ -108,7 +108,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         indicator = " "
         total_length = len(self.name) + 2
         
-        if not self.__is_saved:
+        if not self._is_saved:
             indicator += style.tcolor("* ", style.AnsiFGColor.YELLOW, styles=[style.AnsiStyle.BLINK])
             total_length += 2
         
@@ -128,7 +128,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         if self.node_intersects():
             self.move_node_right()
 
-        self.__is_saved = False
+        self._is_saved = False
         ui.render_all()
         
     def remove_node(self) -> None:
@@ -148,7 +148,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         self.nodes.remove(node)
 
         self.selection.node = self.nodes[0] if self.nodes else None
-        self.__is_saved = False
+        self._is_saved = False
         ui.render_all()
         return status_bar.set_message(f"Removed {style.node(node)}")
 
@@ -176,7 +176,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
             return
 
         self.selection.highlighted_source.disconnect()
-        self.__is_saved = False
+        self._is_saved = False
         ui.render_all()
         
     def choose_source(self) -> None:
@@ -197,7 +197,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         self.selection.src = None
         self.edit_node_mode = False
         
-        self.__is_saved = False
+        self._is_saved = False
         ui.render_all()
 
     def edit_constant(self) -> None:
@@ -216,7 +216,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
         }
         status_bar.keys_help("Edit constant.", edit_help)
 
-        self.__is_saved = False
+        self._is_saved = False
         current_value = self.selection.highlighted_source.constant_value or ""
         value = self.viewport.prompt(style.source(self.selection.highlighted_source), current_value)
         self.selection.highlighted_source.set_constant(value)

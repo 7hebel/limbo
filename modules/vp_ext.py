@@ -4,6 +4,7 @@ from modules import helpers
 from modules import measure
 
 import typing
+import math
 import abc
 
 if typing.TYPE_CHECKING:
@@ -16,6 +17,7 @@ class TargetViewport(abc.ABC):
     edit_node_mode: bool
     camera: measure.Camera
     _nodes_state_cache: dict[str, str]
+    _is_saved: bool
 
     @abc.abstractmethod
     def render(self) -> None: ...
@@ -36,89 +38,98 @@ def node_safe_rect(node: node.Node) -> measure.Rect:
 
 
 class ShiftableFocus(TargetViewport):
-    def shift_focus_left(self) -> None:
+    """ 
+    Allows to shift focus between nodes. 
+    The algorithm selects the closest node in given direction. 
+    When calculating distance between nodes, Y coordinate is mulitplied
+      because visually, the chars are twice as high as they are wide,
+      so it feels much more natural and smooth.
+    """
+    
+    def __can_shift(self) -> bool:
+        """ Check if can shift to any other node. """
         if not self.nodes:
-            return
+            return False
 
         if self.selection.node is None:
             self.selection.node = self.nodes[0]
+            return False
+    
+        return True
+    
+    def shift_focus_left(self) -> None:
+        if not self.__can_shift():
             return
 
         candidate = None
+        candidate_dist = 1000
 
         for node in self.nodes:
-            if node == self.selection.node or node.position.x == self.selection.node.position.x:
-                continue
-
-            if node.position.x < (self.selection.node.position.x + self.selection.node.rect.w):
-                if candidate is None or candidate and node.position.x > candidate.position.x:
+            if node.position.x < self.selection.node.position.x:
+                distance = math.dist((node.position.x, node.position.y * 2), (self.selection.node.position.x, self.selection.node.position.y * 2))
+                
+                if candidate is None or candidate and distance < candidate_dist:
                     candidate = node
-
+                    candidate_dist = distance
+                
         if candidate is not None:
             self.selection.node = candidate
             self.render()
 
     def shift_focus_right(self) -> None:
-        if not self.nodes:
-            return
-
-        if self.selection.node is None:
-            self.selection.node = self.nodes[0]
+        if not self.__can_shift():
             return
 
         candidate = None
+        candidate_dist = 1000
 
         for node in self.nodes:
-            if node == self.selection.node or node.position.x == self.selection.node.position.x:
-                continue
+            if node.position.x > self.selection.node.position.x:
+                distance = math.dist((node.position.x, node.position.y * 2), (self.selection.node.position.x, self.selection.node.position.y * 2))
 
-            if self.selection.node.position.x < node.position.x:
-                if candidate is None or candidate and node.position.x < candidate.position.x:
+                if candidate is None or candidate and distance < candidate_dist:
                     candidate = node
+                    candidate_dist = distance
 
         if candidate is not None:
             self.selection.node = candidate
             self.render()
 
     def shift_focus_up(self) -> None:
-        if not self.nodes:
-            return
-
-        if self.selection.node is None:
-            self.selection.node = self.nodes[0]
+        if not self.__can_shift():
             return
 
         candidate = None
-
+        candidate_dist = 1000
+        
         for node in self.nodes:
-            if node == self.selection.node or node.position.y == self.selection.node.position.y:
-                continue
+            node_bottom_y = node.position.y + node.rect.h
+            
+            if (self.selection.node.position.y + self.selection.node.rect.h) > node_bottom_y:
+                distance = math.dist((node.position.x, node_bottom_y * 2), (self.selection.node.position.x, self.selection.node.position.y * 2))
 
-            if (self.selection.node.position.y + self.selection.node.rect.h) > (node.position.y + node.rect.h):
-                if candidate is None or candidate and (node.position.y + node.rect.h) > (candidate.position.y + candidate.rect.h):
+                if candidate is None or candidate and distance < candidate_dist:
                     candidate = node
+                    candidate_dist = distance
 
         if candidate is not None:
             self.selection.node = candidate
             self.render()
 
     def shift_focus_down(self) -> None:
-        if not self.nodes:
-            return
-
-        if self.selection.node is None:
-            self.selection.node = self.nodes[0]
+        if not self.__can_shift():
             return
 
         candidate = None
+        candidate_dist = 1000
 
         for node in self.nodes:
-            if node == self.selection.node or node.position.y == self.selection.node.position.y:
-                continue
-
             if self.selection.node.position.y < node.position.y:
-                if candidate is None or candidate and node.position.y < candidate.position.y:
+                distance = math.dist((node.position.x, node.position.y * 2), (self.selection.node.position.x, self.selection.node.position.y * 2))
+                
+                if candidate is None or candidate and distance < candidate_dist:
                     candidate = node
+                    candidate_dist = distance
 
         if candidate is not None:
             self.selection.node = candidate
@@ -144,6 +155,7 @@ class MovableNodes(TargetViewport):
             self.selection.node.position.x -= 2
 
         self.render()
+        self._is_saved = False
 
     def move_node_right(self) -> None:
         if self.selection.node is None:
@@ -154,6 +166,7 @@ class MovableNodes(TargetViewport):
             self.selection.node.position.x += 2
 
         self.render()
+        self._is_saved = False
 
     def move_node_up(self) -> None:
         if self.selection.node is None:
@@ -164,6 +177,7 @@ class MovableNodes(TargetViewport):
             self.selection.node.position.y -= 1
 
         self.render()
+        self._is_saved = False
 
     def move_node_down(self) -> None:
         if self.selection.node is None:
@@ -174,6 +188,7 @@ class MovableNodes(TargetViewport):
             self.selection.node.position.y += 1
 
         self.render()
+        self._is_saved = False
 
 
 class StateBasedNodeCache(TargetViewport):

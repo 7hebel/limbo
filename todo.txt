@@ -1,17 +1,9 @@
 node.outputs is always only one or no values. dont keep it as a list!
 
-waitforenter - check if focused windwow
-
-cleanup vp_ext
-
-use math.dist() to choose the closest node while shifting focus 
-
 render node only if haschanged
 store previous RECT in cache with state and clean this rect, not new one
 
 mutliple workspaces?
-
-to exe: skip unused imports
 
 debug mode : save calls with args and returns into file. (visualize each call?)
 
