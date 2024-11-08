@@ -82,7 +82,8 @@ class StatusBarComponent(ui.TextUIComponent):
             f"alt+{chars.ALL_ARROWS[0]}": "move node",
             "enter": "edit node",
             "tab": "nodes",
-            "F1": "run"
+            "F1": "run",
+            "F2": "compile",
         }
         
         self.keys_help("", STD_KEYS)

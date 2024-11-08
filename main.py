@@ -208,11 +208,13 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         style.clear_screen()
         helpers.flush_system_keyboard_buffer_win()
-        exit()
+        terminal.show_cursor()
+        exit(0)
         
     except Exception as internal_error:
         style.clear_screen()
         helpers.flush_system_keyboard_buffer_win()
+        terminal.show_cursor()
         
         print(style.tcolor(" INTERNAL ERROR! ", color=style.AnsiFGColor.WHITE, bg_color=style.AnsiBGColor.RED))
         traceback.print_exc()

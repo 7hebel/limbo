@@ -1,3 +1,7 @@
+node.outputs is always only one or no values. dont keep it as a list!
+
+waitforenter - check if focused windwow
+
 cleanup vp_ext
 
 use math.dist() to choose the closest node while shifting focus 
