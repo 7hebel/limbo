@@ -88,7 +88,7 @@ class StatusBarComponent(ui.TextUIComponent):
         self.keys_help("", STD_KEYS)
 
     def error(self, message: str) -> None:
-        content = style.tcolor(" ERROR ", color=style.AnsiFGColor.WHITE, bg_color=style.AnsiBGColor.RED) + " " + message
+        content = style.tcolor(" E ", color=style.AnsiFGColor.BLACK, bg_color=style.AnsiBGColor.RED) + " " + message
         self.set_message(content)
 
     def render(self) -> None:

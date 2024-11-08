@@ -152,8 +152,8 @@ class NodeOutput:
         self.target = None
 
 
-def connect_sources(s1: NodeInput | NodeOutput, s2: NodeInput | NodeOutput) -> None:
-    """ Connect two node data sources. Perfroms basic validation. """
+def connect_sources(s1: NodeInput | NodeOutput, s2: NodeInput | NodeOutput) -> bool | None:
+    """ Connect two node data sources. Perfroms basic validation. Returns True on success or None on fail. """
 
     if s1.node == s2.node:
         return status_bar.error(f"Cannot connect sources from the same node {style.node(s1.node)}")
@@ -169,3 +169,4 @@ def connect_sources(s1: NodeInput | NodeOutput, s2: NodeInput | NodeOutput) -> N
     s2.disconnect()
 
     s1.connect(s2) if isinstance(s1, NodeOutput) else s2.connect(s1)
+    return True

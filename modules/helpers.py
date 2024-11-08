@@ -1,3 +1,5 @@
+from modules.measure import VerticalDirection
+
 from typing import Generator, Any
 
 
@@ -45,3 +47,15 @@ def flush_system_keyboard_buffer_win() -> None:
             
     except:
         return
+
+
+def wrapping_index_shift(array: list, current_index: int, direction: VerticalDirection) -> int:
+    next_index = current_index + direction
+    
+    if next_index > len(array) - 1:
+        next_index = 0
+    elif next_index == -1:
+        next_index = len(array) - 1
+        
+    return next_index
+    

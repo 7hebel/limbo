@@ -11,85 +11,111 @@ class WireBuilder:
         
         self.avoid_rects: list[measure.Rect] = []
         for av_rect in avoid_rects:
-            rect_copy = measure.Rect(
+            rel_rect = measure.Rect(
                 measure.Position(av_rect.pos.x - camera_rect.pos.x, av_rect.pos.y - camera_rect.pos.y),
                 av_rect.w,
                 av_rect.h
             ) 
             
-            self.avoid_rects.append(rect_copy)
+            self.avoid_rects.append(rel_rect)
         
         # Ensure wire is not going below node's border.
-        start = (start[0] + 1, start[1])
-        end = (end[0] - 1, end[1])
-        
-        self.start = start
-        self.end = end
+        self.start = (start[0] + 1, start[1])
+        self.end = (end[0] - 1, end[1])
         
         self.positioned_chars: dict[tuple[int, int], str] = {}
         self.choose_optimal_build_strategy()
         
-    def collides_with_any_rect(self, x: int, y: int) -> bool:
-        for avoid_rect in self.avoid_rects:
-            if avoid_rect.contains_point(x, y):
+    def point_collides_with_any_rect(self, x: int, y: int) -> bool:
+        """ Check if given (x, y) point collides with any defined rectangle to avoid. """
+        for rect in self.avoid_rects:
+            if rect.contains_point(x, y):
                 return True
         return False
         
     def choose_optimal_build_strategy(self) -> None:
+        """ 
+        Based on the start and end point coordinates, choose the best 
+        wire building strategy out of:
+            - Straight horizontal line.
+            - Horizontal path.
+            - Vertical path.
+        """
+        
         sx, sy = self.start
         ex, ey = self.end
         
+        # Straight horizontal line.
         if ey == sy:
-            return self.build_straight_line()
+            return self.build_straight_hz_line()
         
-        if ex < sx:
-            path_x_range = range(sx, ex) if sx < ex else range(ex, sx)
-            mid_points_y = (
-                (math.floor((sy + ey) / 2)),
-                (math.ceil((sy + ey) / 2)),
-                (math.floor((sy + ey) / 2)) + 1,
-                (math.ceil((sy + ey) / 2)) - 1,
-            )  # It looks much better when line turns near to the middle of Y.
-            
-            # Try to find common Y near to the middle of both points.
-            for test_y in mid_points_y:
-                collision = False
-                
-                for test_x in path_x_range:
-                    if self.collides_with_any_rect(test_x, test_y):
-                        collision = True
-                        break
-                
-                if not collision:
-                    return self.build_targetted_vertical_path(test_y)
-            
-            # Find any common Y.
-            possible_target_y = range(sy, ey) if sy < ey else range(ey, sy)
-            target_y = None
-            
-            for test_y in possible_target_y:
-                collision = False
-
-                for test_x in path_x_range:
-                    if self.collides_with_any_rect(test_x, test_y):
-                        collision = True
-                        break
-                        
-                if not collision:
-                    target_y = test_y
-                    break
-            
-            if target_y is None:
-                return self.build_vertical_path_auto()
-
-            else:
-                return self.build_targetted_vertical_path(target_y)
-            
-        else:
-            # Horizontal path.
+        # Horizontal path.
+        if ex >= sx:
             return self.build_horizontal_path()
         
-    def build_straight_line(self) -> None:
+        # Vertical line.
+        path_x_range = range(sx, ex) if sx < ex else range(ex, sx)
+        mid_points_y = (
+            (math.floor((sy + ey) / 2)),
+            (math.ceil((sy + ey) / 2)),
+            (math.floor((sy + ey) / 2)) + 1,
+            (math.ceil((sy + ey) / 2)) - 1,
+        )  # It looks much better when the line turns near to the middle of Y.
+        
+        # Try to find common Y near to the middle of both points.
+        for test_y in mid_points_y:
+            collision = False
+            
+            for test_x in path_x_range:
+                if self.point_collides_with_any_rect(test_x, test_y):
+                    collision = True
+                    break
+            
+            if not collision:
+                return self.build_targetted_vertical_path(test_y)
+        
+        # Find any common Y.
+        possible_target_y = range(sy, ey) if sy < ey else range(ey, sy)
+        target_y = None
+        
+        # Try to find Y level not colliding with any rectangle.
+        for test_y in possible_target_y:
+            collision = False
+
+            for test_x in path_x_range:
+                if self.point_collides_with_any_rect(test_x, test_y):
+                    collision = True
+                    break
+                    
+            if not collision:
+                target_y = test_y
+                break
+        
+        # If there is no other option, but to go through any rect, find ANY common Y.
+        if target_y is None:
+            sy, ey = self.start[1], self.end[1]
+        
+            s_delta = -1 if sy > ey else 1
+            e_delta = -1 if ey > sy else 1
+            
+            common_y = False
+            inc_round = False
+            
+            while not common_y:
+                inc_round = not inc_round
+
+                if sy == ey:
+                    target_y = sy
+                    break
+                
+                if inc_round:
+                    sy += s_delta
+                else:
+                    ey += e_delta
+
+        return self.build_targetted_vertical_path(target_y)
+        
+    def build_straight_hz_line(self) -> None:
         sx, sy = self.start
         ex, ey = self.end
         
@@ -137,62 +163,6 @@ class WireBuilder:
 
             for y in range(ey + 1, sy):
                 self.positioned_chars[(meet_x, y)] = self.charset.vt
-        
-    def build_vertical_path_auto(self) -> None:
-        sx, sy = self.start
-        ex, ey = self.end
-        
-        meet_y = False
-        append_round = False
-        
-        # Set headers to point to source.
-        if sy > ey:
-            self.positioned_chars[(sx, sy)] = self.charset.se
-        else:
-            self.positioned_chars[(sx, sy)] = self.charset.ne
-            
-        if ey > sy:
-            self.positioned_chars[(ex, ey)] = self.charset.sw
-        else:
-            self.positioned_chars[(ex, ey)] = self.charset.nw
-            
-        # Find common Y pos.
-        while not meet_y:
-            append_round = not append_round
-            if sy == ey:
-                meet_y = sy
-                break
-            
-            if append_round:
-                if sy > ey:
-                    sy -= 1
-                else:
-                    sy += 1
-                self.positioned_chars[(sx, sy)] = self.charset.vt
-
-            else:
-                if ey > sy:
-                    ey -= 1
-                else:
-                    ey += 1
-                self.positioned_chars[(ex, ey)] = self.charset.vt
-                    
-        # Fill corners.
-        if self.end[1] < self.start[1]:
-            self.positioned_chars[(sx, meet_y)] = self.charset.ne
-            self.positioned_chars[(ex, meet_y)] = self.charset.sw
-            
-        else:
-            self.positioned_chars[(sx, meet_y)] = self.charset.se
-            self.positioned_chars[(ex, meet_y)] = self.charset.nw
-            
-        # Fill horizontal line.
-        for x in range(ex + 1, sx):
-            self.positioned_chars[(x, sy)] = self.charset.hz
-            
-        # Apply narrow corner fix.
-        if self.end[1] == self.start[1] + 1 or self.end[1] == self.start[1] - 1:
-            self.positioned_chars[(self.end[0], self.end[1])] = self.charset.fr
             
     def build_targetted_vertical_path(self, target_y: int) -> None:
         sx, sy = self.start

@@ -7,7 +7,9 @@ from modules import ui
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from modules import nodes
+    from modules.nodes.collection import Collection
+    from modules.nodes.factory import NodeFactory 
+    from modules.nodes.node import Node
 
 
 class SideBarComponent(ui.TextUIComponent):
@@ -16,11 +18,11 @@ class SideBarComponent(ui.TextUIComponent):
         self.is_folded = False
         self.width = 22
         self.in_factories_level: bool = False
-        self.__focused_object: "nodes.Collection | nodes.NodeFactory | None" = None
+        self.__focused_object: "Collection | NodeFactory | None" = None
         self.__workspace_id: str | None = None
         
-        self.collections_folds: dict["nodes.Collection", bool] = {}
-        self.collections_array: list["nodes.Collection"] = []
+        self.collections_folds: dict["Collection", bool] = {}
+        self.collections_array: list["Collection"] = []
         
         self.help_keys = {
             "(ctrl?)" + chars.ALL_ARROWS[:2]: "navigate",
@@ -31,7 +33,7 @@ class SideBarComponent(ui.TextUIComponent):
         
         super().__init__()
 
-    def set_collections(self, collections: list["nodes.Collection"]) -> None:
+    def set_collections(self, collections: list["Collection"]) -> None:
         self.collections_array = [c.value for c in collections]
         self.collections_folds = {
             collection.value: False for collection in collections
@@ -173,7 +175,7 @@ class SideBarComponent(ui.TextUIComponent):
         self.collections_folds[collection] = not self.collections_folds[collection]
         self.render()
     
-    def spawn_node(self) -> "nodes.Node | None":
+    def spawn_node(self) -> "Node | None":
         if not self.in_factories_level:
             return None
         

@@ -1,7 +1,7 @@
 from modules.status_bar import status_bar
+from modules.nodes.node import Node
 from modules.nodes import factory
 from modules.nodes import source
-from modules.nodes import node
 
 from modules import measure
 from modules import style
@@ -37,12 +37,12 @@ class LimbFormat:
     VOID = b"^"
 
     @staticmethod
-    def import_state(path: str, workspace_id: str) -> list[node.Node]:
-        saved_nodes: list[node.Node] = []
+    def import_state(path: str, workspace_id: str) -> list[Node]:
+        saved_nodes: list[Node] = []
         unlinked_wires: list[bytes] = []
         unattached_consts: list[bytes] = []
         
-        def read_node(node_data: bytes) -> node.Node | None:
+        def read_node(node_data: bytes) -> Node | None:
             node_data = node_data[len(LimbFormat.NODE_HEADER):]
 
             try:
@@ -93,7 +93,7 @@ class LimbFormat:
             if not is_std:
                 pass
 
-            base_factory: node.NodeFactory = factory.factories_register.get(factory_id)
+            base_factory: factory.NodeFactory = factory.factories_register.get(factory_id)
             if base_factory is None:
                 return status_bar.error(f"Parsing {style.highlight(path)} failed due to invalid FactoryID found: {factory_id} ({factory.factories_register.keys()})")
 
@@ -103,7 +103,7 @@ class LimbFormat:
 
             return target_node
 
-        def get_node(node_id: str) -> node.Node | None:
+        def get_node(node_id: str) -> Node | None:
             for node in saved_nodes:
                 if node.node_id == node_id:
                     return node
@@ -194,7 +194,7 @@ class LimbFormat:
 
 
     @staticmethod
-    def export(nodes_state: list[node.Node], path: str) -> None:
+    def export(nodes_state: list[Node], path: str) -> None:
         """ Save nodes state into file at given path. File should exist. """
 
         def parse_output_wire(output: source.NodeOutput) -> bytes:
@@ -229,7 +229,7 @@ class LimbFormat:
             
             return content
 
-        def parse_node(node: source.Node) -> bytes:
+        def parse_node(node: Node) -> bytes:
             """
             Convert Node into savable format.
 

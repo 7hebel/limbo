@@ -163,6 +163,10 @@ def main() -> None:
             # Run program.
             if keyboard.is_pressed("f1"):
                 VIEWPORT.run_program()
+                
+            # Compile program.
+            if keyboard.is_pressed("f2"):
+                VIEWPORT.compile_program()
 
         elif VIEWPORT.scope.edit_node_mode:
             

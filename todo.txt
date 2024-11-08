@@ -7,8 +7,12 @@ store previous RECT in cache with state and clean this rect, not new one
 
 mutliple workspaces?
 
+to exe: skip unused imports
 
-to .exe??? (gpt)
+debug mode : save calls with args and returns into file. (visualize each call?)
+
+(MAYBE) more than one flow_input source (loops?) 
+
 
 NODES:
 files nodes category

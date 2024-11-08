@@ -1,12 +1,8 @@
 from modules.nodes import node
-from modules import terminal
-from modules import helpers
 from modules import style
-from modules import ui
 
 from dataclasses import dataclass
 from typing import Any
-import time
 
 
 @dataclass
@@ -85,81 +81,13 @@ class RuntimeNode:
         else:
             self.output_values = self.handler(ins) or {}
 
-
-class NodeRunner:
-    MAX_RUN_COUNT = 100
-    run_count = 0
-
-    def __init__(self, start_node: node.Node, raw_nodes: list[node.Node]) -> None:
-        self.runtime_nodes: dict[int, RuntimeNode] = {}
-        self.start_time = time.time_ns()
-        self.initialize_nodes(start_node, raw_nodes)
-        helpers.MemoryJar.new_jar()
-
-    def initialize_nodes(self, start_node: node.Node, raw_nodes: list[node.Node]) -> None:
-        for raw_node in raw_nodes:
-            rt_node = RuntimeNode(raw_node)
-            self.runtime_nodes[raw_node.node_id] = rt_node
-
-        for rt_node in self.runtime_nodes.values():
-            rt_node.initialize(self.runtime_nodes)
-
-        self.entry_node = self.runtime_nodes[start_node.node_id]
-
-    def run(self):
-        NodeRunner.run_count += 1
-        if NodeRunner.run_count > NodeRunner.MAX_RUN_COUNT:
-            self.error_dump(None, f"Program has been restarted over {NodeRunner.MAX_RUN_COUNT} times. Automatically terminated infinite loop.")
-            return self.finish(-2)
-
-        node = self.entry_node
-
-        while node:
-            try:
-                node.execute()
-
-            except EOFError as exit_code:
-                if str(exit_code) == "-100":
-                    return self.run()
-                return self.finish(exit_code)
-
-            except RuntimeError as error:
-                self.error_dump(node, error)
-                return self.finish(-1)
-
-            except RecursionError:
-                self.error_dump(node, "Infinite recurrsion occured.")
-                return self.finish(-2)
-
-            except KeyboardInterrupt:
-                self.error_dump(node, "Execution manually terminated.")
-                return self.finish(-3)
-
-            node = node.flow_next
-            if node is None:
-                return self.finish(0)
-
-    def finish(self, exit_code: int) -> int:
-        NodeRunner.run_count = 0
-
-        total_time_s = (time.time_ns() - self.start_time) / 1e9
-        time_info = style.tcolor(str(total_time_s) + "s", style.AnsiFGColor.CYAN)
-        exit_info = style.tcolor(str(exit_code), style.AnsiFGColor.RED if exit_code < 0 else style.AnsiFGColor.CYAN)
-
-        print(f"\n{style.ITALIC}Program finished execution in {style.RESET}{time_info} {style.ITALIC}with exit code {style.RESET}{exit_info}")
-        print(f"{style.key('enter')} to continue...")
-        terminal.wait_for_enter()
-
-        ui.render_all()
-        return exit_code
-
-    def error_dump(self, node: RuntimeNode | None, error: RuntimeError | str) -> None:
-        content = style.tcolor("\n ERROR ", color=style.AnsiFGColor.WHITE, bg_color=style.AnsiBGColor.RED)
-
-        if node is None:
-            content += f" Execution failed!"
-        else:
-            content += f" Execution of node: {style.node(node.node_model)} failed!"
-
-        print(content)
-        print("\n    " + str(error))
+            if isinstance(self.output_values, str):  # Next flow pointer name.
+                next_flow_name = self.output_values
+                
+                if next_flow_name not in self.out_sources:
+                    self.flow_next = None
+                    return
+                
+                self.flow_next = self.out_sources[next_flow_name].rt_node
+                
+    

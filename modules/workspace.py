@@ -25,7 +25,7 @@ class SelectionState:
     node: Node | None = None
     src: source.NodeInput | source.NodeOutput | None = None
     highlighted_source: source.NodeInput | source.NodeOutput | None = None
-
+        
 
 class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
     def __init__(self, name: str) -> None:
@@ -165,12 +165,8 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
 
         flows_ctrls = self.selection.node.get_selectable_flow_controls()
         all_sources = flows_ctrls + list(helpers.iter_alternately(self.selection.node.inputs, self.selection.node.outputs))
-        next_index = all_sources.index(self.selection.highlighted_source) + direction
-
-        if next_index > len(all_sources) - 1:
-            next_index = 0
-        elif next_index == -1:
-            next_index = len(all_sources) - 1
+        current_index = all_sources.index(self.selection.highlighted_source)
+        next_index = helpers.wrapping_index_shift(all_sources, current_index, direction)
 
         self.selection.highlighted_source = all_sources[next_index]
         self.render()
@@ -194,11 +190,13 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
             self.edit_node_mode = False
             return self.render()
 
-        source.connect_sources(self.selection.highlighted_source, self.selection.src)
+        status = source.connect_sources(self.selection.highlighted_source, self.selection.src)
+        if status:
+            status_bar.standard_keys_help()
+        
         self.selection.src = None
         self.edit_node_mode = False
         
-        status_bar.standard_keys_help()
         self.__is_saved = False
         ui.render_all()
 

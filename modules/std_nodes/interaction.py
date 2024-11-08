@@ -2,8 +2,8 @@ from modules.nodes.source import NodeInput, NodeOutput
 from modules.nodes.collection import NodesCollections
 from modules.nodes.factory import NodeFactory
 from modules.nodes.node import FlowControl
-from modules import user_input
 from modules import terminal
+from modules import helpers
 from modules import style
 from modules import types
 
@@ -11,8 +11,8 @@ from modules import types
 # Input.
 def input_interaction(ins: dict[str, str]) -> dict[str, str]:
     prompt = ins.get("prompt") or ""
-    value = user_input.get_input(prompt)
-    terminal.hide_cursor()
+    helpers.flush_system_keyboard_buffer_win()
+    value = input(prompt)
     return {"value": value}
 
 NodeFactory(

@@ -34,14 +34,14 @@ class FlowControl:
     
     def set_output_source(self, input_node: source.NodeInput) -> None:
         if input_node.data_type != types.FLOW:
-            return status_bar.errorr(f"Cannot connect {style.source(input_node)} to a FLOW node as it's type is not {style.datatype(types.FLOW)}")
+            return status_bar.error(f"Cannot connect {style.source(input_node)} to a FLOW node as it's type is not {style.datatype(types.FLOW)}")
         
         self.output_src.disconnect()
         self.output_src.connect(input_node)
         
     def set_input_source(self, output_node: source.NodeOutput) -> None:
         if output_node.data_type != types.FLOW:
-            return status_bar.errorr(f"Cannot connect {style.source(output_node)} to a FLOW node as it's type is not {style.datatype(types.FLOW)}")
+            return status_bar.error(f"Cannot connect {style.source(output_node)} to a FLOW node as it's type is not {style.datatype(types.FLOW)}")
         
         self.input_src.disconnect()
         self.input_src.constant_value(output_node)
@@ -54,7 +54,7 @@ class Node:
     flow: FlowControl
     inputs: list[source.NodeInput]
     outputs: list[source.NodeOutput]
-    handler: Callable[[dict[str, source.NodeInput], dict[str, source.NodeOutput]], None]
+    handler: Callable[[dict[str, source.NodeInput]], dict[str, Any] | None]
     position: measure.Position | None = None
     node_id: str = None
     factory: "NodeFactory | None" = None

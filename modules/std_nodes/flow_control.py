@@ -1,5 +1,6 @@
 from modules.nodes.source import NodeInput, NodeOutput
 from modules.nodes.collection import NodesCollections
+from modules.execution.exit_codes import ExitCode
 from modules.nodes.factory import NodeFactory
 from modules.nodes.node import FlowControl
 from modules import types
@@ -19,7 +20,7 @@ START_FACTORY = NodeFactory(
 
 # Exit.
 def exit_flow(ins: dict[str, int]) -> None:
-    code = ins.get("Code") or -1
+    code = ins.get("Code") or ExitCode.OK
     raise EOFError(code)
 
 NodeFactory(
@@ -46,14 +47,16 @@ NodeFactory(
 )
 
 # Restart.
-def restart(*_) -> None:
-    raise EOFError(-100)
+def restart(ins: dict[str, bool]) -> None:
+    save_mem = ins.get("Save memory")
+    code = ExitCode.RESTART if not save_mem else ExitCode.RESTART_SAVE_MEMORY
+    raise EOFError(code)
 
 NodeFactory(
     title="Restart",
     collection=NodesCollections.FLOW_CONTROL,
     flow=FlowControl(False, enable_input=True),
-    inputs=[],
+    inputs=[NodeInput("Save memory", types.BOOLEAN, required=False)],
     outputs=[],
     handler=restart,
 )

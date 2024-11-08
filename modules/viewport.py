@@ -1,4 +1,6 @@
 from modules.status_bar import status_bar
+from modules.execution import interpreter
+from modules.execution import compiler
 from modules.side_bar import side_bar
 from modules.nodes.node import Node
 from modules import wire_builder
@@ -14,7 +16,6 @@ from modules import format
 from modules import chars
 from modules import style
 from modules import types
-from modules import run
 from modules import ui
 
 import os
@@ -78,7 +79,10 @@ class ViewportComponent(ui.TextUIComponent):
             else:
                 builder.feed_char(flow_in_char, outline_color)
         else:
-            builder.feed_char(flow_in_char, outline_color)
+            if node.flow.enable_input and self.scope.selection.src == node.flow.input_src:
+                builder.feed_char(flow_in_char, style.AnsiFGColor.WHITE, styles=[style.AnsiStyle.INVERT, style.AnsiStyle.UNDERLINE])
+            else:
+                builder.feed_char(flow_in_char, outline_color)
 
         title_line = f"{node.title}".center(w - 2)
         builder.feed_string(title_line, node.color or None, styles=[style.AnsiStyle.INVERT, style.AnsiStyle.ITALIC] if node == self.scope.selection.node and self.scope.edit_node_mode else [])
@@ -89,7 +93,10 @@ class ViewportComponent(ui.TextUIComponent):
             else:
                 builder.feed_char(flow_out_char, outline_color)
         else:
-            builder.feed_char(flow_out_char, outline_color)
+            if node.flow.enable_output and self.scope.selection.src == node.flow.output_src:
+                builder.feed_char(flow_out_char, style.AnsiFGColor.WHITE, styles=[style.AnsiStyle.INVERT, style.AnsiStyle.UNDERLINE])
+            else:
+                builder.feed_char(flow_out_char, outline_color)
 
         builder.break_line()
 
@@ -168,7 +175,7 @@ class ViewportComponent(ui.TextUIComponent):
             terminal.set_cursor_pos(x, y)
             print(char)
 
-    def prompt(self, text: str, placeholder: str) -> str | None:
+    def prompt(self, text: str, placeholder: str = "") -> str | None:
         rect = self.get_rect()
         y = rect.pos.y + rect.h - 1
 
@@ -228,22 +235,6 @@ class ViewportComponent(ui.TextUIComponent):
                 if self.work_rect().contains_point(c_x, c_y):
                     terminal.write_at(char, c_x, c_y)
 
-    def run_program(self) -> None:
-        if not std_nodes.START_FACTORY.instances[self.scope.id]:
-            return status_bar.error(f"Missing {style.node(std_nodes.START_FACTORY)} node!")
-
-        for node in self.scope.nodes:
-            for input_source in node.inputs:
-                if input_source.required and input_source.constant_value is None and input_source.source is None:
-                    self.scope.camera.set_pos(node.position)
-                    self.render()
-                    
-                    return status_bar.error(f"Undefined required value: {style.source(input_source)}")
-
-        style.clear_screen()
-        start_node = std_nodes.START_FACTORY.instances[self.scope.id][0]
-        run.NodeRunner(start_node, self.scope.nodes).run()
-
     def import_state(self, path: str | None = None) -> None:
         if path is None:
             path = self.prompt("Import path", "")
@@ -277,3 +268,43 @@ class ViewportComponent(ui.TextUIComponent):
         self.scope.associate_file(path)
         self.scope.render = renderer
         
+    def prerun_check(self) -> bool:
+        """ Check for missing nodes, undefined values before start. Returns if can start. """
+        if not std_nodes.START_FACTORY.instances[self.scope.id]:
+            status_bar.error(f"Missing {style.node(std_nodes.START_FACTORY)} node!")
+            return False
+
+        for node in self.scope.nodes:
+            for input_source in node.inputs:
+                if input_source.required and input_source.constant_value is None and input_source.source is None:
+                    self.scope.camera.set_pos(node.position)
+                    self.render()
+                    
+                    status_bar.error(f"Undefined required value: {style.source(input_source)}")
+                    return False
+                
+        return True
+        
+    def run_program(self) -> None:
+        if not self.prerun_check():
+            return
+
+        style.clear_screen()
+        start_node = std_nodes.START_FACTORY.instances[self.scope.id][0]
+        interpreter.NodeRunner(start_node, self.scope.nodes).run()
+
+    def compile_program(self) -> None:
+        if not self.prerun_check():
+            return
+        
+        name = self.scope.name
+
+        if not name:
+            name = self.prompt("Name")
+        
+        if name is None:
+            return
+        
+        start_node = std_nodes.START_FACTORY.instances[self.scope.id][0]
+        compiler.Compiler(name, start_node, self.scope.nodes)
+        ui.render_all()

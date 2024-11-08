@@ -27,8 +27,8 @@ def node_safe_rect(node: node.Node) -> measure.Rect:
 
     w, h = node.calc_output_size()
     rect = measure.Rect(
-        measure.Position(node.position.x - 1, node.position.y - 1),
-        w + 2,
+        measure.Position(node.position.x - 2, node.position.y - 1),
+        w + 4,
         h + 2
     )
 
