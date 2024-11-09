@@ -212,6 +212,9 @@ class ViewportComponent(ui.TextUIComponent):
             center_x = vp_rect.pos.x + (vp_rect.w // 2) - (title_length // 2)
             terminal.write_at(title, center_x, 0)
 
+        if not self.scope.nodes:
+            return self.clean_contents()
+
         # Draw data wires.
         for node in self.scope.nodes:
             for output in node.outputs + [node.flow.output_src]:
