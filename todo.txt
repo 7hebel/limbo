@@ -1,5 +1,3 @@
-apply render optimization to the sidebar
-
 ctrl+down on CMD scrolls
 
 more than one flow_input source (loops?)

@@ -1,5 +1,6 @@
 from modules import terminal
 from modules import measure
+from modules import string
 from modules import style
 from modules import chars
 from modules import ui
@@ -17,6 +18,7 @@ class SideBarComponent(ui.TextUIComponent):
         self.is_focused = False
         self.is_folded = False
         self.width = 22
+        self.optimized_renderer = ui.OptimizedRenderer(self)
         self.in_factories_level: bool = False
         self.__focused_object: "Collection | NodeFactory | None" = None
         self.__workspace_id: str | None = None
@@ -196,6 +198,14 @@ class SideBarComponent(ui.TextUIComponent):
             
         return measure.Rect(measure.Position(x, y), w, h)
     
+    def work_rect(self) -> measure.Rect | None:
+        if self.is_folded:
+            return None
+            
+        rect = self.get_rect()
+        work_pos = measure.Position(1, 1)
+        return measure.Rect(work_pos, rect.w - 1, rect.h - 1)
+    
     def get_border_connections(self) -> style.BorderConnection:
         return style.BorderConnection(
             e = True,
@@ -246,7 +256,6 @@ class SideBarComponent(ui.TextUIComponent):
     
         content_rect.pos.x += 1
         content_rect.w -= 1
-        self.clean_contents(content_rect)
     
         visible_rows = self.total_rows() - self.overflowing_rows()
         scroll_range = range(0, visible_rows)
@@ -262,14 +271,17 @@ class SideBarComponent(ui.TextUIComponent):
             icon = chars.COLLECTION_FOLDED if is_folded else chars.COLLECTION_UNFOLDED
             styles = [style.AnsiStyle.DIM] if not self.is_focused else [style.AnsiStyle.ITALIC, style.AnsiStyle.INVERT] if self.__focused_object == collection else []
             
-            content = style.tcolor(icon, collection.color, styles=[style.AnsiStyle.DIM] if not self.is_focused else []) + " "
-            content += style.tcolor(f"{collection.name}", collection.color, styles=styles)
-            
-            term_line = 2 + line_index - scroll_skip_indexes
-            terminal.set_cursor_pos(3, term_line)
+            content = string.ColoredStringObject()
+            content.feed_char(icon, collection.color, styles=[style.AnsiStyle.DIM] if not self.is_focused else [])
+            content.feed_char(" ")
+            content.feed_string(collection.name, collection.color, styles)
             
             if line_index in scroll_range:
-                print(content)
+                term_line = 2 + line_index - scroll_skip_indexes
+            
+                for pos, char in content.stream_positioned_chars(3, term_line):
+                    self.optimized_renderer.feed_buffer({pos: char})
+
             else:
                 scroll_skip_indexes += 1
             
@@ -277,22 +289,28 @@ class SideBarComponent(ui.TextUIComponent):
                 for i, factory in enumerate(collection.factories):
                     line_index += 1
                     
-                    node_type_char = factory.get_char_indicator()
-                    node_type_indicator = " " + style.tcolor(node_type_char, factory.output_datatype().color, styles=[style.AnsiStyle.DIM]) if node_type_char else ""
-
                     styles = [style.AnsiStyle.DIM] if not self.is_focused else [style.AnsiStyle.ITALIC, style.AnsiStyle.INVERT] if factory == self.__focused_object  else []
                     tree_char = chars.ROUNDED_LINE.vr if (i + 1) != len(collection.factories) else chars.ROUNDED_LINE.sw
-
-                    term_line = 2 + line_index - scroll_skip_indexes
-                    terminal.set_cursor_pos(5, term_line)
                     
-                    content = style.tcolor(tree_char + "╴", collection.color, styles=[style.AnsiStyle.DIM] if not self.is_focused else []) + style.tcolor(factory.title, styles=styles) + node_type_indicator
+                    content = string.ColoredStringObject()
+                    content.feed_string(tree_char + "╴", collection.color, styles=[style.AnsiStyle.DIM] if not self.is_focused else [])
+                    content.feed_string(factory.title, styles=styles)
+                    content.feed_char(" ")
+                    
+                    if factory.get_char_indicator():
+                        content.feed_string(factory.get_char_indicator(), factory.output_datatype().color, styles=[style.AnsiStyle.DIM])
+
                     if line_index in scroll_range:
-                        print(content)
+                        term_line = 2 + line_index - scroll_skip_indexes
+                        
+                        for pos, char in content.stream_positioned_chars(5, term_line):
+                            self.optimized_renderer.feed_buffer({pos: char})
+                        
                     else:
                         scroll_skip_indexes += 1
 
             line_index += 1
         
+        self.optimized_renderer.diff_render()
     
 side_bar = SideBarComponent()
