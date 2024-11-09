@@ -71,6 +71,9 @@ class NodeInput:
     @property
     def icon(self) -> str:
         """ Returns displayable icon in form of a ASCII char based on state. """
+        if self.data_type == types.FLOW:
+            return chars.DOUBLE_LINE.vl
+        
         if self.constant_value is not None:
             return chars.CONSTANT_VALUE
 

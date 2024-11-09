@@ -25,7 +25,7 @@ side_bar.set_workspace_id(default_workspace.id)
 if len(sys.argv) > 1:
     VIEWPORT.import_state(sys.argv[1])
     
-else:
+else: 
     default_workspace.add_node(std_nodes.START_FACTORY.build_instance(default_workspace.id))
 
 

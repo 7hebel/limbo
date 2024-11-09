@@ -61,3 +61,15 @@ NodeFactory(
     handler=restart,
 )
 
+
+# Loop.
+
+NodeFactory(
+    title="Loop",
+    collection=NodesCollections.FLOW_CONTROL,
+    flow=FlowControl(True, False),
+    inputs=[NodeInput("in1", types.FLOW), NodeInput("in2", types.FLOW, required=False)],
+    outputs=[],
+    handler=lambda *_: None
+)
+

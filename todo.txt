@@ -1,3 +1,7 @@
 ctrl+down on CMD scrolls
 
-more than one flow_input source (loops?)
+string.ColoredStringObject function to return dict{pos:char} instaed of stream
+
+nodes and sources documentation + help command (move some shortcuts to help command?)
+
+more than one flow_input source (loops?) (flowin-split: two flow ins one flowout)

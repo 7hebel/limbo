@@ -1,4 +1,3 @@
-from modules.status_bar import status_bar
 from modules.nodes import source
 from modules import measure
 from modules import types
@@ -89,7 +88,7 @@ class Node:
         return (self.position.x + self.calc_node_width() - 1, self.position.y + 1)
 
     def calc_node_height(self) -> int:
-        if not self.has_data_source():
+        if not self.has_any_body_sources():
             return 3  # Only borders, flow controls and title.
         return len(self.inputs) + len(self.outputs) + 4  # Borders, title, separator, sources
 
@@ -171,8 +170,5 @@ class Node:
             if input_src.name == name:
                 return input_src
 
-    def has_data_source(self) -> bool:
-        for src in self.inputs + self.outputs:
-            if src.data_type != types.FLOW:
-                return True
-        return False
+    def has_any_body_sources(self) -> bool:
+        return bool(self.inputs) or bool(self.outputs)

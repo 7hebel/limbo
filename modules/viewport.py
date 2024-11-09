@@ -101,7 +101,7 @@ class ViewportComponent(ui.TextUIComponent):
 
         builder.break_line()
 
-        if not node.has_data_source():
+        if not node.has_any_body_sources():
             builder.feed_string(chars.ROUNDED_LINE.sw + (chars.ROUNDED_LINE.hz * (w - 2)) + chars.ROUNDED_LINE.se, outline_color)
             return (builder, rect)
 

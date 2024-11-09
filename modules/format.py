@@ -29,7 +29,7 @@ class LimbFormat:
 
     VAL_SEP = b","
     SEP = b"\n"
-    PTR = b">"
+    PTR = b"\>"
     END = b"\0"
     EOF = b"\\EOF"
     FALSE = b"F"

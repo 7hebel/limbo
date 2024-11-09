@@ -254,6 +254,9 @@ def __prep_inputs(inputs: list[tuple[str, str, str | None]]) -> dict:
             __execute(node_or_const)
             target_return = NODES_REG.get(node_or_const)["__h_return"]
             
+        if target_return is None:
+            continue
+            
         for ret_key, ret_val in target_return.items():
             if ret_key == src_name:
                 values[name] = ret_val

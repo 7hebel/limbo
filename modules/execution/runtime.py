@@ -61,7 +61,8 @@ class RuntimeNode:
             return self.output_values.get(src_name)
 
         self.execute()
-        return self.request_output_value(src_name)
+        if self.output_values is not None:
+            return self.output_values.get(src_name)
 
     def execute(self) -> None:
         ins = {}
