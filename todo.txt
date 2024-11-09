@@ -1,4 +1,5 @@
-render node only if haschanged
-store previous RECT in cache with state and clean this rect, not new one
+apply render optimization to the sidebar
+
+ctrl+down on CMD scrolls
 
 more than one flow_input source (loops?)

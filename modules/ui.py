@@ -103,7 +103,7 @@ class OptimizedRenderer:
             if work_rect.contains_point(x, y):
                 terminal.write_at(" ", x, y)
 
-        for (x, y) in buff_keys:
+        for (x, y) in sorted(buff_keys, key=lambda pos: pos[1]):
             pos = (x, y)
             content = self.buffer[pos]
 
