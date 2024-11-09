@@ -37,7 +37,7 @@ class ColoredStringObject:
             
             yield char_data.build()
     
-    def stream_positioned_chars(self, x: int, y: int) -> Generator[tuple[str, tuple[int, int]], None, None]:
+    def stream_positioned_chars(self, x: int, y: int) -> Generator[tuple[tuple[int, int], str], None, None]:
         start_x = x
 
         for char in self.stream_chars():
@@ -46,6 +46,6 @@ class ColoredStringObject:
                 x = start_x
                 continue
             
-            yield (char, (x, y))
+            yield ((x, y), char)
             x += 1
             

@@ -84,6 +84,7 @@ class StatusBarComponent(ui.TextUIComponent):
             "tab": "nodes",
             "ctrl+e": "export",
             "ctrl+i": "import",
+            "ctrl+w": "close",
             "F1": "run",
             "F2": "compile",
             "F12": "debug",

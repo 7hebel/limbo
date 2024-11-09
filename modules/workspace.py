@@ -129,7 +129,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
             self.move_node_right()
 
         self._is_saved = False
-        ui.render_all()
+        self.render()
         
     def remove_node(self) -> None:
         """ Remove selected node. Disconnect all wires. """

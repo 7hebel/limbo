@@ -15,9 +15,12 @@ def render_all(skip_component: "TextUIComponent | None" = None) -> None:
     for component in initalized_components:
         if component == skip_component:
             continue
-        
+
         component.draw_borders()
         component.render()
+        
+        if hasattr(component, "optimized_renderer"):  # I couldn't find any better solution :/
+            component.optimized_renderer.force_render()
 
 
 class TextUIComponent(ABC):
@@ -28,43 +31,84 @@ class TextUIComponent(ABC):
     def get_rect(self) -> measure.Rect | None:
         """ Returns component's rectangle including borders. None if component is not visible. """
         ...
-        
+
     @abstractmethod
     def get_border_connections(self) -> style.BorderConnection:
         """ Check which borders might connect with other component's borders. """
         ...
-        
+
     @abstractmethod
     def render(self) -> None:
         """ Render component's contents (not including border.) """
         ...
-        
+
     def clean_contents(self, custom_rect: measure.Rect | None = None) -> None:
         """ Clean component's contents (not including border.) """
         area = self.get_rect()
         if custom_rect is not None:
             area = custom_rect
-        
         if area is None:
             return
-        
+
         border_connections = self.get_border_connections()
-        
+
         yrange = range(area.pos.y + 2, area.pos.y + area.h)
         if border_connections.n:
             yrange = range(area.pos.y + 2, area.pos.y + area.h - 1)
-            
+
         xrange = range(area.pos.x + 1, area.pos.x + area.w)
         if border_connections.e:
             xrange = range(area.pos.x + 1, area.pos.x + area.w - 1)
-        
+
         for y in yrange:
             for x in xrange:
                 terminal.set_cursor_pos(x, y)
                 print(" ", end="")
-         
+
     def draw_borders(self) -> None:
         """ Draw borders inside component's rectangle. """
         rect = self.get_rect()
         if rect is not None:
             style.outline_rect(rect, self.get_border_connections())
+
+
+class OptimizedRenderer:
+    def __init__(self, component: TextUIComponent) -> None:
+        self.current: dict[tuple[int, int], str] = {}
+        self.buffer: dict[tuple[int, int], str] = {}
+        self.component = component
+        self.requires_force_redraw = False
+        
+    def feed_buffer(self, pos_chars: dict[tuple[int, int], str]) -> None:
+        self.buffer.update(pos_chars)
+
+    def force_render(self) -> None:
+        self.requires_force_redraw = False
+        self.current = {}
+        self.buffer = {}
+        
+        self.component.clean_contents()
+        self.component.draw_borders()
+        self.component.render()
+
+    def diff_render(self) -> None:
+        if self.requires_force_redraw:
+            return self.force_render()
+        
+        curr_keys = set(self.current.keys())
+        buff_keys = set(self.buffer.keys())
+        work_rect: measure.Rect = self.component.work_rect()
+
+        for (x, y) in curr_keys.difference(buff_keys):
+            if work_rect.contains_point(x, y):
+                terminal.write_at(" ", x, y)
+
+        for (x, y) in buff_keys:
+            pos = (x, y)
+            content = self.buffer[pos]
+
+            if self.current.get(pos) != content and work_rect.contains_point(x, y):
+                terminal.write_at(content, x, y)
+
+        self.current = self.buffer
+        self.buffer = {}

@@ -48,6 +48,12 @@ def main() -> None:
         if keyboard.is_pressed("ctrl+i"):
             VIEWPORT.import_state()
 
+        # Close workspace.
+        if keyboard.is_pressed("ctrl+w"):
+            VIEWPORT.scope = workspace.Workspace("").initialize(VIEWPORT)
+            side_bar.set_workspace_id(VIEWPORT.scope.id)
+            ui.render_all()
+
         # Sidebar.
         if keyboard.is_pressed("ctrl+b"):
             side_bar.unfocus()
@@ -109,7 +115,7 @@ def main() -> None:
                 if keyboard.is_pressed("ctrl+up"):
                     VIEWPORT.scope.camera.move_up()
                     VIEWPORT.render()
-            
+                    
             # Node movement.
             elif keyboard.is_pressed("alt"):
                 if keyboard.is_pressed("alt+right"):

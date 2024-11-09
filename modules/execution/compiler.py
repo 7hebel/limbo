@@ -11,11 +11,6 @@ import ast
 import os
 
 
-def log(c):
-    with open("x", "a+") as f:
-        f.write(str(c) + "\n")
-
-
 def get_python_command():
     commands = ["python3", "py", "py3"]
 
@@ -29,7 +24,6 @@ def get_python_command():
             continue
 
     raise EnvironmentError("No suitable Python command found. Ensure Python is installed and accessible.")
-
 
 
 def get_function_body(func: Callable) -> str:
@@ -89,6 +83,7 @@ class Compiler:
         self.__compilation_dir_path = "./__compilation/"
         if not os.path.exists(self.__compilation_dir_path):
             os.mkdir(self.__compilation_dir_path)
+            
         self.__build_target_path = self.__compilation_dir_path + f"_compile_{name}.py"
         self.__dependecies_imports = set()
 

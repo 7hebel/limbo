@@ -23,6 +23,7 @@ import os
 
 class ViewportComponent(ui.TextUIComponent):
     def __init__(self, scope: workspace.Workspace) -> None:
+        self.optimized_renderer = ui.OptimizedRenderer(self)
         self.scope = scope.initialize(self)
         super().__init__()
 
@@ -150,15 +151,17 @@ class ViewportComponent(ui.TextUIComponent):
                   color: style.AnsiFGColor,
                   dimmed: bool,
                   highlight: bool
-                  ) -> None:
+                  ) -> dict[tuple[int, int], str]:
         camera_rect = self.get_cameraview_rect()
+        work_rect = self.work_rect()
+        pos_chars = {}
 
         start_pos = (rel_from[0] - camera_rect.pos.x, rel_from[1] - camera_rect.pos.y)
         end_pos = (rel_to[0] - camera_rect.pos.x, rel_to[1] - camera_rect.pos.y)
 
         builder = wire_builder.WireBuilder(start_pos, end_pos, charset, avoid_rects, camera_rect)
-        for (x, y), char in builder.positioned_chars.items():
-            if not self.work_rect().contains_point(x, y):
+        for pos, char in builder.positioned_chars.items():
+            if not work_rect.contains_point(pos[0], pos[1]):
                 continue
 
             styles = []
@@ -171,9 +174,9 @@ class ViewportComponent(ui.TextUIComponent):
                 styles.append(style.AnsiStyle.DIM)
 
             char = style.tcolor(char, color, styles=styles)
+            pos_chars[pos] = char
 
-            terminal.set_cursor_pos(x, y)
-            print(char)
+        return pos_chars
 
     def prompt(self, text: str, placeholder: str = "") -> str | None:
         rect = self.get_rect()
@@ -197,9 +200,9 @@ class ViewportComponent(ui.TextUIComponent):
 
         return value
 
-    def render(self):
-        self.clean_contents()
+    def render(self, force: bool = False):
         camera_rect = self.get_cameraview_rect()
+        work_rect = self.work_rect()
         vp_rect = self.get_rect()
 
         # Workspace name.
@@ -222,7 +225,8 @@ class ViewportComponent(ui.TextUIComponent):
                 selected = self.scope.edit_node_mode and self.scope.selection.highlighted_source in (output, output.target)
                 charset = chars.DOUBLE_LINE if output.data_type == types.FLOW else chars.ROUNDED_LINE if not selected else chars.ROUNDED_DOTTED
 
-                self.draw_wire(rel_start, rel_end, charset, [node.rect, output.target.node.rect], output.data_type.color, dimmed, selected)
+                wire_chars = self.draw_wire(rel_start, rel_end, charset, [node.rect, output.target.node.rect], output.data_type.color, dimmed, selected)
+                self.optimized_renderer.feed_buffer(wire_chars)
 
         # Draw nodes.
         for node in self.scope.nodes:
@@ -231,9 +235,14 @@ class ViewportComponent(ui.TextUIComponent):
             x = rect.pos.x - camera_rect.pos.x
             y = rect.pos.y - camera_rect.pos.y
             
-            for char, (c_x, c_y) in string_object.stream_positioned_chars(x, y):
-                if self.work_rect().contains_point(c_x, c_y):
-                    terminal.write_at(char, c_x, c_y)
+            for pos, char in string_object.stream_positioned_chars(x, y):
+                if work_rect.contains_point(pos[0], pos[1]):
+                    self.optimized_renderer.feed_buffer({pos: char})
+
+        if force:
+            self.optimized_renderer.force_render()
+        else:
+            self.optimized_renderer.diff_render()
 
     def import_state(self, path: str | None = None) -> None:
         if path is None:

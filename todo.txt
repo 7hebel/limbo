@@ -1,10 +1,4 @@
 render node only if haschanged
 store previous RECT in cache with state and clean this rect, not new one
 
-mutliple workspaces?
-
-(MAYBE) more than one flow_input source (loops?) 
-
-NODES:
-files nodes category
-custom nodes (no special chars in node names / sources)
+more than one flow_input source (loops?)

@@ -31,22 +31,8 @@ class FlowControl:
             flow_control.input_src = source.NodeInput("(FlowIn)", types.FLOW)
     
         return flow_control
-    
-    def set_output_source(self, input_node: source.NodeInput) -> None:
-        if input_node.data_type != types.FLOW:
-            return status_bar.error(f"Cannot connect {style.source(input_node)} to a FLOW node as it's type is not {style.datatype(types.FLOW)}")
         
-        self.output_src.disconnect()
-        self.output_src.connect(input_node)
         
-    def set_input_source(self, output_node: source.NodeOutput) -> None:
-        if output_node.data_type != types.FLOW:
-            return status_bar.error(f"Cannot connect {style.source(output_node)} to a FLOW node as it's type is not {style.datatype(types.FLOW)}")
-        
-        self.input_src.disconnect()
-        self.input_src.constant_value(output_node)
-        
-
 @dataclass
 class Node:
     title: str
@@ -190,7 +176,3 @@ class Node:
             if src.data_type != types.FLOW:
                 return True
         return False
-
-
-
-
