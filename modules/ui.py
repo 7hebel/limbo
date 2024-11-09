@@ -103,8 +103,11 @@ class OptimizedRenderer:
             if work_rect.contains_point(x, y):
                 terminal.write_at(" ", x, y)
 
-        for (x, y) in sorted(buff_keys, key=lambda pos: pos[1]):
-            pos = (x, y)
+        for pos in sorted(buff_keys, key=lambda pos: pos[1]):
+            if pos not in self.buffer:
+                continue
+            
+            x, y = pos
             content = self.buffer[pos]
 
             if self.current.get(pos) != content and work_rect.contains_point(x, y):
