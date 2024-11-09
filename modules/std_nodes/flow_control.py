@@ -63,7 +63,6 @@ NodeFactory(
 
 
 # Loop.
-
 NodeFactory(
     title="Loop",
     collection=NodesCollections.FLOW_CONTROL,
@@ -72,4 +71,3 @@ NodeFactory(
     outputs=[],
     handler=lambda *_: None
 )
-

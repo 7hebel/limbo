@@ -72,7 +72,7 @@ class Compiler:
     """ Compile Limbo Nodes into executable. """
 
     def __init__(self, name: str, start_node: Node, all_nodes: list[Node]) -> None:
-        self.name = name
+        self.name = name.removesuffix(".limb")
         self.start_node = start_node
         self.all_nodes = all_nodes
 

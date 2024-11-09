@@ -286,6 +286,7 @@ class SideBarComponent(ui.TextUIComponent):
                 scroll_skip_indexes += 1
             
             if is_folded:
+                line_index += 1
                 continue
             
             for i, factory in enumerate(collection.factories):

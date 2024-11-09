@@ -1,4 +1,5 @@
 from modules.nodes import node
+from modules import types
 from modules import style
 
 from dataclasses import dataclass
@@ -24,6 +25,9 @@ class RuntimeNode:
 
     def initialize(self, all_nodes: dict[int, "RuntimeNode"]) -> None:
         for raw_input in self.node_model.inputs:
+            if raw_input.data_type == types.FLOW:
+                continue
+            
             output_source = raw_input.source
             if output_source is None:
                 if raw_input.constant_value is not None:
