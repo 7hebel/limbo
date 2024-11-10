@@ -1,3 +1,5 @@
+FIX COMPILER! (clear h_return after geting vals)
+
 ctrl+down on CMD scrolls
 
 string.ColoredStringObject function to return dict{pos:char} instaed of stream
@@ -17,3 +19,5 @@ wires arc error again
 on node error (undefined req val, also select this node)
 
 resize while interpreter job - do not redraw
+
+screen flickering while import

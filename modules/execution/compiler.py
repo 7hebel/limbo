@@ -1,5 +1,6 @@
 from modules.nodes.node import Node
 from modules import terminal
+from modules import types
 from modules import style
 
 from typing import Callable
@@ -93,7 +94,7 @@ class Compiler:
         build_target_content += defined_fns + "\n"
         build_target_content += self.build_instances_register() + "\n"
         build_target_content += self.set_entry_node() + "\n"
-        build_target_content += self.attach_static_executor()
+        build_target_content += self.inject_executor()
 
         if os.path.exists(self.__build_target_path):
             os.remove(self.__build_target_path)
@@ -209,7 +210,7 @@ class Compiler:
                         (src_in.name, src_in.constant_value, None)
                     )
                 
-                elif src_in.source is not None:
+                elif src_in.source is not None and src_in.data_type != types.FLOW:
                     node_data['inputs'].append(
                         (src_in.name, src_in.source.node.node_id, src_in.source.name)
                     )
@@ -232,94 +233,9 @@ class Compiler:
         print(f"\nSet entry node to: {style.node(self.start_node)}::{self.start_node.node_id}")
         return f'ENTRY_ID = "{self.start_node.node_id}"'
 
-    def attach_static_executor(self) -> str:
-        """ Build execute(node) function. """
-        return """   
-from modules.execution.exit_codes import ExitCode
-from modules import helpers
-
-from sys import exit
-
-    
-def __prep_inputs(inputs: list[tuple[str, str, str | None]]) -> dict:
-    values = {}
-    
-    for name, node_or_const, src_name in inputs:
-        if src_name is None:
-            values[name] = node_or_const
-            continue
-        
-        target_return = NODES_REG.get(node_or_const)["__h_return"]
-        if target_return is None:
-            __execute(node_or_const)
-            target_return = NODES_REG.get(node_or_const)["__h_return"]
-            
-        if target_return is None:
-            continue
-            
-        for ret_key, ret_val in target_return.items():
-            if ret_key == src_name:
-                values[name] = ret_val
-
-    return values
-
-def __reset_state() -> None:
-    for key in NODES_REG.keys():
-        NODES_REG[key]["__next-flow"] = NODES_REG[key]["__default-next-flow"]
-        NODES_REG[key]["__h_return"] = None
-
-def __execute(node_id: str) -> None:
-    node_data = NODES_REG.get(node_id)
-    handler = FN_REG.get(node_data.get('handler'))
-    inputs = __prep_inputs(node_data.get('inputs'))
-    
-    output = handler(inputs)
-    
-    if isinstance(output, dict):
-        NODES_REG.get(node_id)['__h_return'] = output
-        
-    if isinstance(output, str):
-        for out_name, out_target, _ in node_data.get('outputs'):
-            if output == out_name:
-                NODES_REG.get(node_id)['__next-flow'] = out_target
-                break
-            
-def __run():
-    _curr_node = ENTRY_ID
-    while _curr_node is not None:
-        try:
-            __execute(_curr_node)
-            
-        except EOFError as exit_code:
-            exit_code = int(str(exit_code))
-            
-            if exit_code == ExitCode.RESTART:
-                helpers.MemoryJar.new_jar()
-                __reset_state()
-                return __run()
-            
-            if exit_code == ExitCode.RESTART_SAVE_MEMORY:
-                __reset_state()
-                return __run()
-            
-            return exit(exit_code)
-        
-        except RuntimeError as error:
-            print(f"ERROR: {error}")
-            exit(ExitCode.ERROR)
-
-        except RecursionError:
-            print("ERROR: Infinite recurrsion occured.")
-            exit(ExitCode.INF_RECURSION)
-
-        except KeyboardInterrupt:
-            print("Execution manually terminated.")
-            return exit(ExitCode.MANUAL_TERMINATION)
-        
-        _curr_node = NODES_REG.get(_curr_node)['__next-flow']
-    
-__run()
-    """
+    def inject_executor(self) -> str:
+        with open("./modules/execution/injected/executor.py") as file:
+            return file.read()
 
     def compile_to_exe(self) -> str:
         """ Call nuitka compiler. Returns absolute path to the executable. """
@@ -338,10 +254,9 @@ __run()
         
         target_exe_path = f"{self.__compilation_dir_path}../"
         if os.path.exists(target_exe_path + output_exe):
-            os.remove(target_exe_path + output_exe)
+            os.rename(target_exe_path + output_exe, target_exe_path + output_exe + f".old_{int(time.time())}")
         
         shutil.move(f"{self.__compilation_dir_path}{output_exe}", target_exe_path)
-
         return os.path.abspath(f"{self.__compilation_dir_path}../{output_exe}")
 
     def cleanup(self) -> None:
