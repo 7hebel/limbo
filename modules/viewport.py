@@ -265,11 +265,13 @@ class ViewportComponent(ui.TextUIComponent):
         self.scope = workspace.Workspace("").initialize(self)
         side_bar.set_workspace_id(self.scope.id)
             
-        imported_nodes = format.LimbFormat.import_state(path, self.scope.id)
+        imported_nodes, (cam_x, cam_y) = format.LimbFormat.import_state(path, self.scope.id)
         if imported_nodes is None:
             self.scope = old_scope
             self.render = renderer
             return ui.render_all()
+        
+        self.scope.camera.set_pos(measure.Position(cam_x, cam_y))
         
         for node in imported_nodes:
             self.scope.add_node(node)

@@ -96,7 +96,7 @@ class Workspace(vp_ext.ShiftableFocus, vp_ext.MovableNodes):
             
             self.associate_file(path)
         
-        format.LimbFormat.export(self.nodes, path)
+        format.LimbFormat.export(self.nodes, (self.camera.x, self.camera.y), path)
         self._is_saved = True
         ui.render_all()
         

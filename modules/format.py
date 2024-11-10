@@ -22,10 +22,11 @@ def read_until_seq(data: bytes | None, end_seq: bytes) -> tuple[bytes, bytes] | 
 class LimbFormat:
     """ Custom (.limb) file format used to save nodes state. """
     FILE_HEADER = b"LIMB\0"
+    CAMERA_HEADER = b"\\CAM"
     NODE_HEADER = b"\\N"
     WIRE_HEADER = b"\\W"
     OUTPUTS_HEADER = b"\\O"
-    CONSTS_HEADER = b"\\C"
+    CONST_HEADER = b"\\C"
 
     VAL_SEP = b","
     SEP = b"\n"
@@ -37,7 +38,7 @@ class LimbFormat:
     VOID = b"^"
 
     @staticmethod
-    def import_state(path: str, workspace_id: str) -> list[Node]:
+    def import_state(path: str, workspace_id: str) -> tuple[list[Node], tuple[int, int]]:
         saved_nodes: list[Node] = []
         unlinked_wires: list[bytes] = []
         unattached_consts: list[bytes] = []
@@ -62,10 +63,10 @@ class LimbFormat:
 
                     unlinked_wires.append(wire_data)
                     
-                    if node_data.startswith(LimbFormat.CONSTS_HEADER):
+                    if node_data.startswith(LimbFormat.CONST_HEADER):
                         break
 
-                node_data = node_data.removeprefix(LimbFormat.CONSTS_HEADER)
+                node_data = node_data.removeprefix(LimbFormat.CONST_HEADER)
                 while LimbFormat.END in node_data:
                     node_data, constant_data = read_until_seq(node_data, LimbFormat.END)
                     if node_data is None or not constant_data:
@@ -109,7 +110,6 @@ class LimbFormat:
                     return node
 
         def link_connection(wire_data: bytes) -> bool | None:
-            """ \W 59ebd926f0c34838ac5800ee89f3dadf/(FlowOut) > c1fad08a82974f51808d7541b7c0837c/(FlowIn) END """
             if not wire_data.startswith(LimbFormat.WIRE_HEADER):
                 return status_bar.error(f"Parsing {style.highlight(path)} failed due to invalid connection header at wire: {wire_data}")
             
@@ -171,30 +171,37 @@ class LimbFormat:
             file.seek(0)
 
             line = None
+            cam = (0, 0)
+            
             while line != LimbFormat.EOF:
                 line = file.readline().removesuffix(LimbFormat.SEP)
 
+                if line.startswith(LimbFormat.CAMERA_HEADER):
+                    line = line.removeprefix(LimbFormat.CAMERA_HEADER)
+                    x, y = line.split(LimbFormat.VAL_SEP)
+                    cam = (int(x), int(y))
+                    
                 if line.startswith(LimbFormat.NODE_HEADER):
                     parsed_node = read_node(line)
                     if parsed_node is None:
-                        return
+                        return None, None
 
                     saved_nodes.append(parsed_node)
 
         for wire_data in unlinked_wires:
             if not link_connection(wire_data):
-                return
+                return None, None
             
         for constant_data in unattached_consts:
             if not set_constant(constant_data):
-                return
+                return None, None
 
         status_bar.set_message(f"Succesfully imported {style.highlight(f'{len(saved_nodes)} nodes')}.")
-        return saved_nodes
+        return saved_nodes, cam
 
 
     @staticmethod
-    def export(nodes_state: list[Node], path: str) -> None:
+    def export(nodes_state: list[Node], camera_pos: tuple[int, int], path: str) -> None:
         """ Save nodes state into file at given path. File should exist. """
 
         def parse_output_wire(output: source.NodeOutput) -> bytes:
@@ -259,7 +266,7 @@ class LimbFormat:
                     content += parse_output_wire(output_src)
 
             content += LimbFormat.END
-            content += LimbFormat.CONSTS_HEADER
+            content += LimbFormat.CONST_HEADER
             
             for input_src in node.inputs:
                 if input_src.constant_value is not None:
@@ -268,6 +275,10 @@ class LimbFormat:
             return content
 
         content = LimbFormat.FILE_HEADER
+        content += LimbFormat.SEP
+
+        content += LimbFormat.CAMERA_HEADER
+        content += f"{camera_pos[0]}".encode() + LimbFormat.VAL_SEP + f"{camera_pos[1]}".encode()
         content += LimbFormat.SEP
 
         for node in nodes_state:
