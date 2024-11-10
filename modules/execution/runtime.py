@@ -3,7 +3,7 @@ from modules import types
 from modules import style
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Callable
 
 
 @dataclass
@@ -58,22 +58,31 @@ class RuntimeNode:
         if self.flow_next is None and self.out_sources:
             self.flow_next = list(self.out_sources.values())[0].rt_node
 
-    def request_output_value(self, src_name: str) -> Any:
+    def request_output_value(self, src_name: str, debug_msg: Callable | None = None) -> Any:
         if self.output_values is not None:
             if src_name not in self.output_values:
                 raise RuntimeError(f"Requested output resource: <{src_name}> from evaluated node: {style.node(self.node_model)} is missing.")
-            return self.output_values.get(src_name)
+
+            output = self.output_values.get(src_name)
+            self.output_values = None
+            return output
 
         self.execute()
+        
+        if debug_msg:
+            debug_msg(f"Executed backwards: {style.node(self.node_model)} -> {self.output_values}")
+            
         if self.output_values is not None:
-            return self.output_values.get(src_name)
+            value = self.output_values.get(src_name)
+            self.output_values = None
+            return value
 
-    def execute(self) -> None:
+    def execute(self, debug_msg: Callable | None = None) -> None:
         ins = {}
 
         for name, pointer in self.in_sources.items():
             if isinstance(pointer, RuntimeSourcePtr):
-                ins[name] = pointer.rt_node.request_output_value(pointer.src_name)
+                ins[name] = pointer.rt_node.request_output_value(pointer.src_name, debug_msg)
 
             else:
                 ins[name] = pointer  # Constant.
@@ -82,9 +91,15 @@ class RuntimeNode:
             next_src = self.out_sources.get(self.handler(ins))
             if next_src is not None:
                 self.flow_next = next_src.rt_node
+                
+            if debug_msg:
+                debug_msg(f"Exec (out): {style.node(self.node_model)} ({ins}) -> Next: {self.flow_next.name if self.flow_next else 'NONE'}")
 
         else:
             self.output_values = self.handler(ins) or {}
+
+            if debug_msg:
+                debug_msg(f"Exec: {style.node(self.node_model)} ({ins}) -> {self.output_values}")
 
             if isinstance(self.output_values, str):  # Next flow pointer name.
                 next_flow_name = self.output_values
@@ -95,4 +110,3 @@ class RuntimeNode:
                 
                 self.flow_next = self.out_sources[next_flow_name].rt_node
                 
-    

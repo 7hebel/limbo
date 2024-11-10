@@ -57,11 +57,10 @@ class NodeRunner:
 
         while node:
             try:
-                node.execute()
-                self.debug_log(f"Executed RT-node: <{style.highlight(node.name)}> with result: {style.highlight(str(node.output_values))} / next: {node.flow_next.name if node.flow_next else 'none'}")
+                node.execute(self.debug_log)
 
             except EOFError as exit_code:
-                exit_code = int(str(exit_code))
+                exit_code = int(exit_code.args[0])
 
                 if exit_code == ExitCode.RESTART:
                     helpers.MemoryJar.new_jar()

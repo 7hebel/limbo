@@ -8,6 +8,12 @@ static compiler executor as standalone file.
 
 SAVE camera position in save file (however, do not make file !is_saved when shifting)
 
-ON NODE FOCUS, if outside work rect, move camera to it
+ON NODE FOCUS / moved, if outside work rect, move camera to it 
 
 (maybe) mouse support
+
+wires arc error again
+
+on node error (undefined req val, also select this node)
+
+resize while interpreter job - do not redraw

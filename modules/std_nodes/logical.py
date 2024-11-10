@@ -36,7 +36,7 @@ NodeFactory(
 # Or.
 def or_bool_handler(ins: dict[str, bool]) -> dict[str, bool]:
     a, b = ins.get("a"), ins.get("b")
-    return {"OR": a and b}
+    return {"OR": a or b}
 
 NodeFactory(
     title="Or",
