@@ -99,6 +99,10 @@ class StatusBarComponent(ui.TextUIComponent):
     def render(self) -> None:
         rect = self.get_rect(force=True)
         max_len = rect.w - 4
+        
+        if side_bar.is_folded:
+            max_len -= 1
+        
         msg_lines = split_styled_message(self.message, max_len)
         
         if len(msg_lines) != self.msg_height:
@@ -110,6 +114,9 @@ class StatusBarComponent(ui.TextUIComponent):
         
         x = rect.pos.x + 2
         y = rect.pos.y + 1
+        
+        if side_bar.is_folded:
+            x += 1
         
         for i in range(self.msg_height):
             terminal.set_cursor_pos(x, y + i + 1)

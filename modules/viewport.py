@@ -201,6 +201,9 @@ class ViewportComponent(ui.TextUIComponent):
         return value
 
     def render(self, force: bool = False):
+        if ui.SCREEN_BUSY:
+            return
+        
         # Check if selected node is within camera.
         selected_node = self.scope.selection.node
         if selected_node is not None:
@@ -266,18 +269,16 @@ class ViewportComponent(ui.TextUIComponent):
         if not os.path.exists(path):
             return status_bar.error(f"Couldn't import state from file: {path} (file not found)")
         
-        # Temporarily disable rendering.
-        renderer = self.render
-        self.render = lambda: None
+        ui.SCREEN_BUSY = True
         
         old_scope = self.scope
         self.scope = workspace.Workspace("").initialize(self)
         side_bar.set_workspace_id(self.scope.id)
             
         imported_nodes, (cam_x, cam_y) = format.LimbFormat.import_state(path, self.scope.id)
+        
         if imported_nodes is None:
             self.scope = old_scope
-            self.render = renderer
             return ui.render_all()
         
         self.scope.camera.set_pos(measure.Position(cam_x, cam_y))
@@ -285,11 +286,9 @@ class ViewportComponent(ui.TextUIComponent):
         for node in imported_nodes:
             self.scope.add_node(node)
 
-        self.render = renderer
-        self.render()
-        
+        ui.SCREEN_BUSY = False
         self.scope.associate_file(path)
-        self.scope.render = renderer
+        self.render()
         
     def prerun_check(self) -> bool:
         """ Check for missing nodes, undefined values before start. Returns if can start. """

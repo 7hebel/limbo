@@ -1,13 +1,5 @@
 ctrl+down on CMD scrolls
 
-string.ColoredStringObject function to return dict{pos:char} instaed of stream
-
 nodes and sources documentation + help command (move some shortcuts to help command?)
 
-(maybe) mouse support
-
-screen flickering while import
-
 rewrite format.py
-
-status_bar text x + 1 if sidebar folded
