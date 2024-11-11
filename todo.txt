@@ -4,14 +4,10 @@ string.ColoredStringObject function to return dict{pos:char} instaed of stream
 
 nodes and sources documentation + help command (move some shortcuts to help command?)
 
-ON NODE FOCUS / moved, if outside work rect, move camera to it 
-
 (maybe) mouse support
 
-wires arc error again
-
-on node error (undefined req val, also select this node)
-
-resize while interpreter job - do not redraw
-
 screen flickering while import
+
+rewrite format.py
+
+status_bar text x + 1 if sidebar folded

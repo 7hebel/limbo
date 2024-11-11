@@ -2,6 +2,7 @@ from modules.nodes.node import Node
 from modules import terminal
 from modules import types
 from modules import style
+from modules import ui
 
 from typing import Callable
 import subprocess
@@ -77,6 +78,8 @@ class Compiler:
         self.start_node = start_node
         self.all_nodes = all_nodes
 
+        ui.SCREEN_BUSY = True
+
         start_time = time.time_ns()
         terminal.clear_screen()
         print(f"Started compilation process for: {style.highlight(name + ".exe")}")
@@ -109,6 +112,8 @@ class Compiler:
         print(f"\n\nCompiled {style.highlight(name)} to: {style.highlight(exe_path)} in {style.highlight(f'{total_time}s')}\n\n")
         print(f"Press {style.key('enter')} to continue...")
         terminal.wait_for_enter()
+        
+        ui.SCREEN_BUSY = False
 
     def fn_name(self, node: Node) -> str:
         return f'f_{node.factory.title.replace(" ", "_").replace("-", "_").replace("/", "_")}'

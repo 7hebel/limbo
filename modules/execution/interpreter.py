@@ -24,6 +24,8 @@ class NodeRunner:
         helpers.MemoryJar.new_jar()
         self.debug_log("Initialized new memory jar.")
 
+        ui.SCREEN_BUSY = True
+        
     def debug_log(self, content: str) -> None:
         if self.debug_mode:
             print(style.tcolor("  (DBG) ", style.AnsiFGColor.CYAN) + content)
@@ -46,6 +48,7 @@ class NodeRunner:
             rt_node.output_values = None
             
     def run(self):
+        
         NodeRunner.run_count += 1
         self.debug_log(f"Starting program for the: {style.highlight(f'{NodeRunner.run_count} time.')}")
         
@@ -103,6 +106,7 @@ class NodeRunner:
         print(f"{style.key('enter')} to continue...")
         terminal.wait_for_enter()
 
+        ui.SCREEN_BUSY = False
         ui.render_all()
         return exit_code
 

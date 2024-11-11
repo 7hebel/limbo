@@ -5,11 +5,16 @@ from modules import style
 from abc import ABC, abstractmethod
 
 
+SCREEN_BUSY: bool = False  # True whenever display shouldn't be overdrawn by UI. (execution/compilation)
+
 initalized_components: list["TextUIComponent"] = []
 
 
 def render_all(skip_component: "TextUIComponent | None" = None) -> None:
     """ Render all initialized UI components and their borders. """
+    if SCREEN_BUSY:
+        return
+    
     terminal.clear_screen()
 
     for component in initalized_components:

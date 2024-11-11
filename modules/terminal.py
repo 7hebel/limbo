@@ -139,7 +139,11 @@ def term_size_listener(test_run: bool = False) -> None:
     
     while 1:
         w, h = os.get_terminal_size()
+        
         if w != prev_w or h != prev_h:
+            if ui.SCREEN_BUSY:
+                continue
+            
             prev_w = w
             prev_h = h
             

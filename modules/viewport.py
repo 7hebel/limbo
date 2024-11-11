@@ -201,6 +201,15 @@ class ViewportComponent(ui.TextUIComponent):
         return value
 
     def render(self, force: bool = False):
+        # Check if selected node is within camera.
+        selected_node = self.scope.selection.node
+        if selected_node is not None:
+            node_rect = selected_node.rect
+
+            if not node_rect.fully_within(self.get_cameraview_rect()):
+                new_cam_pos = measure.Position(node_rect.pos.x - 2, node_rect.pos.y - 2)
+                self.scope.camera.set_pos(new_cam_pos)
+        
         camera_rect = self.get_cameraview_rect()
         work_rect = self.work_rect()
         vp_rect = self.get_rect()
@@ -292,6 +301,7 @@ class ViewportComponent(ui.TextUIComponent):
             for input_source in node.inputs:
                 if input_source.required and input_source.constant_value is None and input_source.source is None:
                     self.scope.camera.set_pos(node.position)
+                    self.scope.selection.node = node
                     self.render()
                     
                     status_bar.error(f"Undefined required value: {style.source(input_source)}")

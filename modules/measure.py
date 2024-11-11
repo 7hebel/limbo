@@ -26,6 +26,18 @@ class Rect:
     def contains_point(self, x: int, y: int) -> bool:
         return x in range(self.pos.x, self.pos.x + self.w) and y in range(self.pos.y, self.pos.y + self.h)
       
+    def fully_within(self, rect: "Rect") -> bool:
+        """ Check if this rect is fully within other rect. """
+        x_range = range(rect.pos.x, rect.pos.x + rect.w)
+        y_range = range(rect.pos.y, rect.pos.y + rect.h)
+      
+        return all((
+            self.pos.x in x_range,
+            self.pos.x + self.w in x_range,
+            self.pos.y in y_range,
+            self.pos.y + self.h in y_range
+        ))
+      
       
 @dataclass
 class Camera:

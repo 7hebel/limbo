@@ -203,3 +203,7 @@ class WireBuilder:
         for x in range(ex + 1, sx):
             self.positioned_chars[(x, sy)] = self.charset.hz
             
+        # Apply narrow corner fix.
+        if self.end[1] == self.start[1] + 1 or self.end[1] == self.start[1] - 1:
+            self.positioned_chars[(self.end[0], self.end[1])] = self.charset.fr
+            
