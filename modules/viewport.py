@@ -200,13 +200,13 @@ class ViewportComponent(ui.TextUIComponent):
 
         return value
 
-    def render(self, force: bool = False):
+    def render(self, force: bool = False, skip_cam_check: bool = False):
         if ui.SCREEN_BUSY:
             return
         
         # Check if selected node is within camera.
         selected_node = self.scope.selection.node
-        if selected_node is not None:
+        if selected_node is not None and not skip_cam_check:
             node_rect = selected_node.rect
 
             if not node_rect.fully_within(self.get_cameraview_rect()):

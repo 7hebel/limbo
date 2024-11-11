@@ -58,7 +58,7 @@ class SideBarComponent(ui.TextUIComponent):
         
     def unfocus(self) -> None:
         self.is_focused = False
-        ui.render_all()
+        self.render()
     
     def move_focus_down(self) -> None:
         if not self.in_factories_level:

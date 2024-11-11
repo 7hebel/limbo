@@ -1,5 +1,6 @@
 from modules.execution.exit_codes import ExitCode
 from modules.execution import runtime
+from modules.execution import debug
 from modules.nodes import node
 from modules import terminal
 from modules import helpers
@@ -17,38 +18,37 @@ class NodeRunner:
         self.start_node = start_node
         self.raw_nodes = raw_nodes
         self.debug_mode = debug_mode
+        self.dbg_session = debug.DebugSession() if debug_mode else None
         
         self.runtime_nodes: dict[int, runtime.RuntimeNode] = {}
         self.start_time = time.time_ns()
         self.initialize_nodes(start_node, raw_nodes)
         helpers.MemoryJar.new_jar()
-        self.debug_log("Initialized new memory jar.")
 
         ui.SCREEN_BUSY = True
         
     def debug_log(self, content: str) -> None:
         if self.debug_mode:
-            print(style.tcolor("  (DBG) ", style.AnsiFGColor.CYAN) + content)
+            self.dbg_session.write_msg(content)
 
     def initialize_nodes(self, start_node: node.Node, raw_nodes: list[node.Node]) -> None:
         for raw_node in raw_nodes:
-            rt_node = runtime.RuntimeNode(raw_node)
+            rt_node = runtime.RuntimeNode(raw_node, self.dbg_session)
             self.runtime_nodes[raw_node.node_id] = rt_node
 
         for rt_node in self.runtime_nodes.values():
             rt_node.initialize(self.runtime_nodes)
 
         self.entry_node = self.runtime_nodes[start_node.node_id]
-        self.debug_log(f"Initialized {len(self.runtime_nodes)} nodes.")
+        self.debug_log(f"Initialized {style.highlight(str(len(self.runtime_nodes)))} nodes.")
 
     def reset_values(self) -> None:
-        self.debug_log(f"Reset state for: {len(self.runtime_nodes)} nodes.")
+        self.debug_log(f"Reset state for: {style.highlight(str(len(self.runtime_nodes)))} nodes.")
 
         for rt_node in self.runtime_nodes.values():
             rt_node.output_values = None
             
     def run(self):
-        
         NodeRunner.run_count += 1
         self.debug_log(f"Starting program for the: {style.highlight(f'{NodeRunner.run_count} time.')}")
         
@@ -60,7 +60,7 @@ class NodeRunner:
 
         while node:
             try:
-                node.execute(self.debug_log)
+                node.execute()
 
             except EOFError as exit_code:
                 exit_code = int(exit_code.args[0])

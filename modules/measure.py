@@ -43,7 +43,7 @@ class Rect:
 class Camera:
     x: int
     y: int
-    sensitivity: int = 1
+    sensitivity: int = 1.5
     
     def get_pos(self) -> Position:
         return Position(self.x, self.y)
@@ -53,16 +53,16 @@ class Camera:
         self.y = pos.y
     
     def move_left(self) -> None:
-        self.x += 2 * self.sensitivity
+        self.x += int(2 * self.sensitivity)
         
     def move_right(self) -> None:
-        self.x -= 2 * self.sensitivity
+        self.x -= int(2 * self.sensitivity)
         
     def move_up(self) -> None:
-        self.y += 1 * self.sensitivity
+        self.y += int(1 * self.sensitivity)
         
     def move_down(self) -> None:
-        self.y -= 1 * self.sensitivity
+        self.y -= int(1 * self.sensitivity)
     
         
 class VerticalDirection(IntEnum):

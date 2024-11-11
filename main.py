@@ -102,19 +102,19 @@ def main() -> None:
             if keyboard.is_pressed("ctrl"):
                 if keyboard.is_pressed("ctrl+left"):
                     VIEWPORT.scope.camera.move_left()
-                    VIEWPORT.render()
+                    VIEWPORT.render(skip_cam_check=True)
                                     
                 if keyboard.is_pressed("ctrl+right"):
                     VIEWPORT.scope.camera.move_right()
-                    VIEWPORT.render()
+                    VIEWPORT.render(skip_cam_check=True)
                     
                 if keyboard.is_pressed("ctrl+down"):
                     VIEWPORT.scope.camera.move_down()
-                    VIEWPORT.render()
+                    VIEWPORT.render(skip_cam_check=True)
                     
                 if keyboard.is_pressed("ctrl+up"):
                     VIEWPORT.scope.camera.move_up()
-                    VIEWPORT.render()
+                    VIEWPORT.render(skip_cam_check=True)
                     
             # Node movement.
             elif keyboard.is_pressed("alt"):

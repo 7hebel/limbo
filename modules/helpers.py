@@ -26,7 +26,6 @@ class MemoryJar:
         return self.data.get(key, default)
 
 
-
 def iter_alternately(a: list, b: list) -> Generator:
     a = a.copy()
     b = b.copy()

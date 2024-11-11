@@ -26,9 +26,9 @@ class LimbFormat:
     .limb file format:
     
     LIMB\0  (header)
-    \CAM10,20  (camera position 10,20)
-    \NIsStandard,NodeID,factory,x,y\0\ONodeID/srcOut\>NodeID/srcIn\0\0\Cconstant  (each node)
-    \EOF
+    \\CAM10,20  (camera position 10,20)
+    \\NIsStandard,NodeID,factory,x,y\0\ONodeID/srcOut\>NodeID/srcIn\0\0\Cconstant  (each node)
+    \\EOF
     """
     FILE_HEADER = b"LIMB\0"
     CAMERA_HEADER = b"\\CAM"

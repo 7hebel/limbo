@@ -16,6 +16,7 @@ except NotImplementedError:
 MIN_W, MIN_H = 124, 33
 
 
+
 def clear_screen():
     os.system("cls || clear")
 
@@ -26,7 +27,7 @@ def set_cursor_pos(x: int, y: int) -> None:
 
 def write_at(content: str, x: int, y: int) -> None:
     set_cursor_pos(x, y)
-    print(content)
+    sys.stdout.write(content + "\n")
 
 
 def get_cursor_pos() -> tuple[int, int]:
