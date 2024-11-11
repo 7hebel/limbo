@@ -1,5 +1,1 @@
-ctrl+down on CMD scrolls
-
-nodes and sources documentation + help command (move some shortcuts to help command?)
-
-rewrite format.py
+custom nodes.
