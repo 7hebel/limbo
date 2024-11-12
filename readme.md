@@ -60,6 +60,19 @@
 
 <div align="center">
     <br>
+    <h2>🔎 Test program</h2>
+</div>
+
+
+
+Import one of templates located in the `templates/` directory to check how program works.
+
+```bash
+py main.py templates/calc.limb
+```
+
+<div align="center">
+    <br>
     <h2>👁️ User Interface</h2>
 </div>
 
@@ -174,8 +187,6 @@ You can export current workspace state into a file written in the LIMB format. I
 `\NT,abc,xyz,9,23\0\Oabc/srcOut\>def/srcIn\0\0\Cabc/srcIn\>value\0` - Each node
 
 `\EOF` - End of file.
-
-
 
 Node format:
 
