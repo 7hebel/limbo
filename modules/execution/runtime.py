@@ -127,6 +127,9 @@ class RuntimeNode:
                 if self.dbg_session:
                     self.dbg_session.point_next_node(self.flow_next)
                     
+            elif self.dbg_session:
+                self.dbg_session.point_next_node(self.flow_next)
+                    
             if self.dbg_session:
                 self.dbg_session.end_execution()
                 
