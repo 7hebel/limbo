@@ -4,9 +4,8 @@
     <br>
     <br>
     <h2>🔮 Limbo nodes.</h2>
+    <h1>JiT interpreted and compiled, node-based programming environment.</h1>
 </div>
-
-### JIT interpreted and compiled node-based programming environment.
 
 ![App](https://raw.githubusercontent.com/7hebel/limbo/refs/heads/main/assets/ss-app.png)
 
