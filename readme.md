@@ -190,54 +190,32 @@ You can export current workspace state into a file written in the LIMB format. I
 
 Node format:
 
-`\N` - Node header.
-
-`T` - Is standard node? (T or F)
-
-`,` - Value separator
-
-`abc` - Node's instance ID.
-
-`,`
-
-`xyz` - Node's factory ID.
-
-`,`
-
-`9,23` - Node's position (x=9, y=23)
-
-`,`
-
-`\0` - End of metadata section.
-
-`\O` - Output header.
-
-`abc` - Output node's ID (the same as above)
-
-`/` - Separator.
-
-`srcOut` - Name of output source.
-
-`\>` - Source pointer.
-
-`def` - Wire's target node's ID.
-
-`/`
-
-`srcIn` - Name of source wire connects to.
-
-`\0` - End of wire data.
-
-`\0` - End of outputs section.
-
-`\C` - Constant values header.
-
-`abc/srcIn` - Node ID/source name (like in Output)
-
-`\>` - Pointer
-
-`value` - Constant value.
-
-`\0` - End of constant value.
+| Token        | Description                                         |
+|--------------|-----------------------------------------------------|
+| `\N`         | Node header                                         |
+| `T`          | Is standard node? (`T` for True or `F` for False)   |
+| `,`          | Value separator                                     |
+| `abc`        | Node's instance ID                                  |
+| `,`          | Value separator                                     |
+| `xyz`        | Node's factory ID                                   |
+| `,`          | Value separator                                     |
+| `9,23`       | Node's position in the format `x=9, y=23`           |
+| `,`          | Value separator                                     |
+| `\0`         | End of metadata section                             |
+| `\O`         | Output header                                       |
+| `abc`        | Output node's ID (matches node instance ID above)   |
+| `/`          | Separator                                           |
+| `srcOut`     | Name of output source (example: `srcOut`)           |
+| `\>`         | Source pointer                                      |
+| `def`        | Wire's target node's ID (example: `def`)            |
+| `/`          | Separator                                           |
+| `srcIn`      | Name of source wire connects to (example: `srcIn`)  |
+| `\0`         | End of wire data                                    |
+| `\0`         | End of outputs section                              |
+| `\C`         | Constant values header                              |
+| `abc/srcIn`  | Node ID/source name in `nodeID/sourceName` format   |
+| `\>`         | Pointer                                             |
+| `value`      | Constant value (const example: `value`)             |
+| `\0`         | End of constant value                               |
 
 (might contains multiple constants separated by `\0` or no constants where file node ends on `\C`)
