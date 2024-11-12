@@ -157,3 +157,76 @@ Default codes:
 - `11` - Restart program and save memory
 
 The `RESTART` node does the same thing as a `EXIT` with code set to either `10` or `11`.
+
+<div align="center">
+    <br>
+    <h2>📄 .limb format</h2>
+</div>
+
+You can export current workspace state into a file written in the LIMB format. It is a custom file format used specifically to save limbo nodes states. Format uses byte symbols, so it might not be displayed correctly in all text editors (use hex editors).
+
+📝 Format syntax.
+
+`LIMB\0` - File header.
+
+`\CAM6,34` - Camera position (x=6, y=34)
+
+`\NT,abc,xyz,9,23\0\Oabc/srcOut\>def/srcIn\0\0\Cabc/srcIn\>value\0` - Each node
+
+`\EOF` - End of file.
+
+
+
+Node format:
+
+`\N` - Node header.
+
+`T` - Is standard node? (T or F)
+
+`,` - Value separator
+
+`abc` - Node's instance ID.
+
+`,`
+
+`xyz` - Node's factory ID.
+
+`,`
+
+`9,23` - Node's position (x=9, y=23)
+
+`,`
+
+`\0` - End of metadata section.
+
+`\O` - Output header.
+
+`abc` - Output node's ID (the same as above)
+
+`/` - Separator.
+
+`srcOut` - Name of output source.
+
+`\>` - Source pointer.
+
+`def` - Wire's target node's ID.
+
+`/`
+
+`srcIn` - Name of source wire connects to.
+
+`\0` - End of wire data.
+
+`\0` - End of outputs section.
+
+`\C` - Constant values header.
+
+`abc/srcIn` - Node ID/source name (like in Output)
+
+`\>` - Pointer
+
+`value` - Constant value.
+
+`\0` - End of constant value.
+
+(might contains multiple constants separated by `\0` or no constants where file node ends on `\C`)
