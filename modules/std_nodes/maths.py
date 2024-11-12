@@ -133,6 +133,9 @@ NodeFactory(
 # Divide /
 def divide(ins: dict[str, float]) -> dict[str, float]:
     x, y = ins.get("x"), ins.get("y")
+    if y == 0:
+        raise RuntimeError("Division by 0.")
+    
     return {"=": x / y}
 
 NodeFactory(

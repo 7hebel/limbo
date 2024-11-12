@@ -40,8 +40,11 @@ class DebugSession:
         message = f"{style.highlight(name)} = `{style.tcolor(str(value), datatype.color)}`  {style.DIM}(constant){style.RESET}"
         self.write_msg(message)
         
-    def point_next_node(self, next: "RuntimeNode") -> None:
-        message = f"Next -> {style.node(next.node_model)}"
+    def point_next_node(self, next: "RuntimeNode | None") -> None:
+        if next is not None:
+            message = f"Next -> {style.node(next.node_model)}"
+        else:
+            message = "Next -> (no next)"
         self.write_msg(message)
         
     def node_output(self, values: dict) -> None:

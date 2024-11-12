@@ -109,70 +109,51 @@ Press `F1` to run current program starting from a `START` node. You can also com
 
 Below the main viewport, You can see the status bar displaying either feedback from Your previous actions (like saving file or altering a node) or keyboard shortcuts available in the current mode.
 
+<div align="center">
+    <br>
+    <h2>🔢 Data types</h2>
+</div>
 
+Data type describes type of data stored inside source. They can be distinguished by a color and name. There are 4 data types in Limbo.
 
+- `TEXT` (yellow) - Represents standard text provided by user or set as a constant value.
 
+- `NUMBER` (purple) - Represents number and is used for mathematical operations. (all numbers are treated as a floating-point)
 
+- `BOOLEAN` (blue) - Logical value, either True or False.
 
+- `FLOW` (red) - Special type not representing actual data but a runtime flow. It is used to point next node that should be executed without passing any input data to it.
 
+##### 🔁 Cast types.
 
+Use nodes from the `Cast` collection to switch data types. It is not always possible to cast text to a number, as text may contain invalid characters. Transformer will try to use all numbers and skip text characters but it still may fail, that's why You can provide `default` value that will be used instead. When conversion fails and the `default` value is not provide, program will crash with a `ERROR` status.
 
+<div align="center">
+    <br>
+    <h2>🧠 Memory</h2>
+</div>
 
+There is entire collection of nodes called `Memory`. It adds variable-like storage to the program. At the start of the program, new **memory jar** is created. A memory jar provides key-value storage similar to JSON. The `RESTART` node has a `Save memory` boolean input that if set to True, will not flush current memory state but start program with current memory jar.
 
+<div align="center">
+    <br>
+    <h2>⛔ Exit codes</h2>
+</div>
 
+Your program may exit with a different code just like all executables. All codes greater or equal 0 are considered as a `success` and negative codes means `fail`. The exit code defines reason of exit.
 
+Default codes:
 
+- `0` - OK
 
+- `-1` - Runtime error.
 
+- `-2` - Infinite recursion terminated.
 
+- `-3` - Manual termination.
 
+- `10` - Restart program
 
+- `11` - Restart program and save memory
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+The `RESTART` node does the same thing as a `EXIT` with code set to either `10` or `11`.
