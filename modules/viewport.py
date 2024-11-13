@@ -200,7 +200,7 @@ class ViewportComponent(ui.TextUIComponent):
 
         return value
 
-    def render(self, force: bool = False, skip_cam_check: bool = False):
+    def render(self, skip_cam_check: bool = False):
         if ui.SCREEN_BUSY:
             return
         
@@ -254,10 +254,7 @@ class ViewportComponent(ui.TextUIComponent):
                 if work_rect.contains_point(pos[0], pos[1]):
                     self.optimized_renderer.feed_buffer({pos: char})
 
-        if force:
-            self.optimized_renderer.force_render()
-        else:
-            self.optimized_renderer.diff_render()
+        self.optimized_renderer.diff_render()
 
     def import_state(self, path: str | None = None) -> bool | None:
         if path is None:

@@ -64,8 +64,9 @@ class StatusBarComponent(ui.TextUIComponent):
         rect = self.get_rect(force=True)
         max_len = rect.w - 4
         msg_lines = split_styled_message(self.message, max_len)
+        new_height = len(msg_lines)
         
-        self.msg_height = len(msg_lines)
+        self.msg_height = new_height
         ui.render_all()
 
     def keys_help(self, mode: str, keys_info: dict[str, str]) -> None:

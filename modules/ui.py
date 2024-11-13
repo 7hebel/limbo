@@ -15,17 +15,18 @@ def render_all(skip_component: "TextUIComponent | None" = None) -> None:
     if SCREEN_BUSY:
         return
     
-    terminal.clear_screen()
-
     for component in initalized_components:
         if component == skip_component:
             continue
 
         component.draw_borders()
-        component.render()
         
         if hasattr(component, "optimized_renderer"):  # I couldn't find any better solution :/
             component.optimized_renderer.force_render()
+
+        else:
+            component.clean_contents()
+            component.render()
 
 
 class TextUIComponent(ABC):
@@ -55,15 +56,8 @@ class TextUIComponent(ABC):
         if area is None:
             return
 
-        border_connections = self.get_border_connections()
-
         yrange = range(area.pos.y + 2, area.pos.y + area.h)
-        if border_connections.n:
-            yrange = range(area.pos.y + 2, area.pos.y + area.h - 1)
-
         xrange = range(area.pos.x + 1, area.pos.x + area.w)
-        if border_connections.e:
-            xrange = range(area.pos.x + 1, area.pos.x + area.w - 1)
 
         for y in yrange:
             for x in xrange:
@@ -120,3 +114,4 @@ class OptimizedRenderer:
 
         self.current = self.buffer
         self.buffer = {}
+        
