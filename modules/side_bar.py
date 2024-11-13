@@ -27,8 +27,8 @@ class SideBarComponent(ui.TextUIComponent):
         self.collections_array: list["Collection"] = []
         
         self.help_keys = {
-            "(ctrl?)" + chars.ALL_ARROWS[:2]: "navigate",
-            chars.ALL_ARROWS[2:] + "/enter": "(un)fold collection",
+            "(ctrl?)" + chars.VT_ARROWS: "navigate",
+            chars.HZ_ARROWS + "/enter": "(un)fold collection",
             "space/enter": "spawn node",
             "esc/tab": "exit"
         }

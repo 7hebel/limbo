@@ -12,7 +12,7 @@ class DataType:
 
 TEXT = DataType("Text", style.AnsiFGColor.YELLOW, str)
 NUMBER = DataType("Number", style.AnsiFGColor.MAGENTA, float)
-BOOLEAN = DataType("Boolean", style.AnsiFGColor.BLUE, bool)
+BOOLEAN = DataType("Boolean", style.LOGICAL_COLOR, bool)
 FLOW = DataType("Flow", style.FLOW_CONTROL_COLOR, None)
 
 

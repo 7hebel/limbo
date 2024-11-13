@@ -13,7 +13,9 @@ RESET = Fore.RESET + Back.RESET + Style.RESET_ALL
 DIM = "\033[2m"
 ITALIC = "\033[3m"
 UNDERLINE = "\033[4m"
-FLOW_CONTROL_COLOR = AnsiFGColor.RED
+
+FLOW_CONTROL_COLOR = (222, 91, 94)
+LOGICAL_COLOR = (85, 136, 230)
     
     
 def real_length(styled_text: str) -> int:

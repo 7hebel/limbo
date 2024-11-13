@@ -259,28 +259,29 @@ class ViewportComponent(ui.TextUIComponent):
         else:
             self.optimized_renderer.diff_render()
 
-    def import_state(self, path: str | None = None) -> None:
+    def import_state(self, path: str | None = None) -> bool | None:
         if path is None:
             path = self.prompt("Import path", "")
         
         if path is None:
             return
         
-        if not os.path.exists(path):
+        if not os.path.exists(path) or not os.path.isfile(path):
             return status_bar.error(f"Couldn't import state from file: {path} (file not found)")
         
         ui.SCREEN_BUSY = True
         
-        old_scope = self.scope
-        self.scope = workspace.Workspace("").initialize(self)
-        side_bar.set_workspace_id(self.scope.id)
-            
-        imported_nodes, (cam_x, cam_y) = format.LimbFormat.import_state(path, self.scope.id)
+        new_scope = workspace.Workspace("").initialize(self)
+        side_bar.set_workspace_id(new_scope.id)
+        imported_nodes, cam_pos = format.LimbFormat.import_state(path, new_scope.id)
         
         if imported_nodes is None:
-            self.scope = old_scope
+            ui.SCREEN_BUSY = False
+            side_bar.set_workspace_id(self.scope.id)
             return ui.render_all()
         
+        cam_x, cam_y = cam_pos
+        self.scope = new_scope
         self.scope.camera.set_pos(measure.Position(cam_x, cam_y))
         
         for node in imported_nodes:
@@ -289,6 +290,7 @@ class ViewportComponent(ui.TextUIComponent):
         ui.SCREEN_BUSY = False
         self.scope.associate_file(path)
         self.render()
+        return True
         
     def prerun_check(self) -> bool:
         """ Check for missing nodes, undefined values before start. Returns if can start. """

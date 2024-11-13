@@ -31,18 +31,19 @@ DOUBLE_LINE = LineChars(
     vr="╞",
 )
 
+INPUT_FREE = "┤"  # ○
+INPUT_FULL = "•"  # ◉
+OUTPUT_FREE = "├"  # ◇
+OUTPUT_FULL = "•"  # ◈
 
-INPUT_FREE = "○"
-INPUT_FULL = "◉"
-OUTPUT_FREE = "◇"
-OUTPUT_FULL = "◈"
+VT_ARROWS = "↕"
+HZ_ARROWS = "↔"
+ANY_ARROW = "↑"
+ALL_ARROWS = VT_ARROWS + HZ_ARROWS
 
-ALL_ARROWS = "🠙🠛🠘🠚"
-
-COLLECTION_FOLDED = "⮞"
-COLLECTION_UNFOLDED = "⮟"
+COLLECTION_FOLDED = "˃"  # ⮞
+COLLECTION_UNFOLDED = "˅"  # ⮟
 
 FUNCTION_NODE = "ƒ"
 FLOW_NODE = "λ"
-CONSTANT_VALUE = "*"
-
+CONSTANT_VALUE = "~"

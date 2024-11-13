@@ -78,8 +78,8 @@ class StatusBarComponent(ui.TextUIComponent):
     def standard_keys_help(self) -> None:
         STD_KEYS = {
             chars.ALL_ARROWS: "shift focus",
-            f"ctrl+{chars.ALL_ARROWS[0]}": "move camera",
-            f"alt+{chars.ALL_ARROWS[0]}": "move node",
+            f"ctrl+{chars.ANY_ARROW}": "move camera",
+            f"alt+{chars.ANY_ARROW}": "move node",
             "enter": "edit node",
             "tab": "nodes",
             "ctrl+e": "export",

@@ -118,9 +118,13 @@ class _Importer:
 
         base_factory: factory.NodeFactory = factory.factories_register.get(factory_id)
         if base_factory is None:
-            return status_bar.error(f"Parsing {style.highlight(path)} failed due to invalid FactoryID found: {factory_id} ({factory.factories_register.keys()})")
+            return status_bar.error(f"Parsing {style.highlight(self.path)} failed due to invalid FactoryID found: {factory_id} ({factory.factories_register.keys()})")
 
         target_node = base_factory.build_instance(self.workspace_id)
+        
+        if target_node is None:
+            return status_bar.error(f"Parsing: {style.highlight(self.path)} failed due to invalid factory ({factory_id}) output.")
+        
         target_node.node_id = node_id
         target_node.position = measure.Position(x, y)
 
