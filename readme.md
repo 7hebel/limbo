@@ -14,7 +14,7 @@
     <h2>✨ About</h2>
 </div>
 
-**Limbo** is a programming environment that allows You to create simple programs using user friendly text interface in the terminal. There is **no code**, just node blocks with input and output sources that You can connect together.
+**Limbo** is a programming environment that allows You to create simple programs using user friendly text interface in the terminal. There is **no code**, just node blocks with the input and output sources that You can connect together.
 
 <div align="center">
     <br>
@@ -23,17 +23,17 @@
 
 1. Ensure [Python](https://www.python.org/downloads/) is installed and added to the PATH.
 
-2. Clone repository:
+2. Clone the repository:
    
    ```bash
    git clone https://github.com/7hebel/limbo.git
    ```
    
-   or download as a ZIP and unpack repo.
+   or download as a ZIP and unpack.
 
-3. Install required dependencies:
+3. Install the required dependencies:
    
-   Open terminal and navigate to the limbo's directory.
+   Open the terminal and navigate to the limbo's directory.
    
    ```bash
    pip install -r requirements.txt
