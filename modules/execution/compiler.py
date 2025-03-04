@@ -261,6 +261,9 @@ class Compiler:
         if os.path.exists(target_exe_path + output_exe):
             os.rename(target_exe_path + output_exe, target_exe_path + output_exe + f".old_{int(time.time())}")
         
+        if not os.path.exists(f"{self.__compilation_dir_path}{output_exe}"):
+            return "<FAIL - No file>"
+        
         shutil.move(f"{self.__compilation_dir_path}{output_exe}", target_exe_path)
         return os.path.abspath(f"{self.__compilation_dir_path}../{output_exe}")
 

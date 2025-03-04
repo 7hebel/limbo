@@ -225,7 +225,7 @@ if __name__ == "__main__":
         exit(0)
         
     except Exception as internal_error:
-        terminal.clear_screen()
+        # terminal.clear_screen()
         helpers.flush_system_keyboard_buffer_win()
         terminal.show_cursor()
         
